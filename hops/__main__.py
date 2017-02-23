@@ -342,14 +342,18 @@ def reduction_alignment_window():
 
     photo = PhotoImage(file=holomon_logo)
     logo_label = Label(root, image=photo)
+    window_label = Label(root, text='Reduction & Alignment')
+    created_by_label = Label(root, text=read_main_log('windows', 'created_by').replace(',', '\n'))
 
     setup_window(root, [
         [],
-        [[logo_label, 0, 1, 6], [directory_label, 1], [directory_entry, 2]],
+        [[logo_label, 0, 1, 6], [window_label, 1, 3, 1, 'title']],
+        [],
+        [[directory_label, 1], [directory_entry, 2]],
         [],
         [[observation_files_label, 1], [observation_files_entry, 2], [observation_files_test, 3]],
         [[bias_files_label, 1], [bias_files_entry, 2], [bias_files_test, 3]],
-        [[dark_files_label, 1], [dark_files_entry, 2], [dark_files_test, 3]],
+        [[created_by_label, 0, 1, 3], [dark_files_label, 1], [dark_files_entry, 2], [dark_files_test, 3]],
         [[flat_files_label, 1], [flat_files_entry, 2], [flat_files_test, 3]],
         [],
         [[show_files_button, 2]],
@@ -726,23 +730,33 @@ def photometry_window():
 
     photo = PhotoImage(file=holomon_logo)
     logo_label = Label(root, image=photo)
+    window_label = Label(root, text='Photometry')
+    created_by_label = Label(root, text=read_main_log('windows', 'created_by').replace(',', '\n'))
 
     setup_list = [
         [],
-        [[logo_label, 0, 1, 6], [position_label, 2, 2], [box_semi_length_label, 4]],
+        [[logo_label, 0, 1, 6], [window_label, 1, 4, 1, 'title']],
+        [],
+        [[position_label, 2, 2], [box_semi_length_label, 4]],
         []
     ]
 
     for target in range(max_targets):
-        setup_list.append([[targets_indication_entry[target], 1], [targets_x_position_label[target], 2],
-                           [targets_y_position_label[target], 3], [targets_aperture_entry[target], 4]])
+
+        if target == 2:
+            setup_list.append([[created_by_label, 0, 1, 3],
+                               [targets_indication_entry[target], 1], [targets_x_position_label[target], 2],
+                               [targets_y_position_label[target], 3], [targets_aperture_entry[target], 4]])
+        else:
+            setup_list.append([[targets_indication_entry[target], 1], [targets_x_position_label[target], 2],
+                               [targets_y_position_label[target], 3], [targets_aperture_entry[target], 4]])
 
     setup_list.append([])
     setup_list.append([[show_fov_button, 4]])
     setup_list.append([])
-    setup_list.append([[photometry_button, 1, 3]])
+    setup_list.append([[photometry_button, 1, 4]])
     setup_list.append([])
-    setup_list.append([[proceed_to_fitting_button, 1, 3]])
+    setup_list.append([[proceed_to_fitting_button, 1, 4]])
     setup_list.append([])
 
     setup_window(root, setup_list)
@@ -1201,15 +1215,20 @@ def fitting_window():
 
     photo = PhotoImage(file=holomon_logo)
     logo_label = Label(root, image=photo)
+    window_label = Label(root, text='Fitting')
+    created_by_label = Label(root, text=read_main_log('windows', 'created_by').replace(',', '\n'))
 
     setup_window(root, [
         [],
-        [[logo_label, 0, 1, 6], [light_curve_file_label, 1, 1, 2], [light_curve_dir_label, 2],
+        [[logo_label, 0, 1, 6], [window_label, 1, 4, 1, 'title']],
+        [],
+        [[light_curve_file_label, 1, 1, 2], [light_curve_dir_label, 2],
          [planet_label, 3, 1, 2], [planet_search_entry, 4]],
         [[light_curve_file_entry, 2], [planet_entry, 4]],
         [],
         [],
-        [[binning_label, 1], [binning_entry, 2], [iterations_label, 3], [iterations_entry, 4]],
+        [[created_by_label, 0, 1, 3],
+         [binning_label, 1], [binning_entry, 2], [iterations_label, 3], [iterations_entry, 4]],
         [[scatter_label, 1], [scatter_entry, 2], [burn_label, 3], [burn_entry, 4]],
         [],
         [[phot_filter_label, 1], [phot_filter_entry, 2], [period_label, 3], [period_entry, 4]],
@@ -1220,11 +1239,11 @@ def fitting_window():
         [[eccentricity_label, 3], [eccentricity_entry, 4]],
         [[periastron_label, 3], [periastron_entry, 4]],
         [],
-        [[fitting_button, 1]],
+        [[fitting_button, 1, 4]],
         [],
-        [[return_to_photometry_button, 1]],
+        [[return_to_photometry_button, 1, 4]],
         [],
-        [[exit_hops_button, 1]],
+        [[exit_hops_button, 1, 4]],
         [],
     ])
 

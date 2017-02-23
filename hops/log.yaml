@@ -84,6 +84,7 @@ windows:
   - bold
   button_height: 2
   button_width: 30
+  created_by: Copyright (c) 2017, , Angelos Tsiaras
   entries_bd: 3
   fitting_window: FITTING
   frame_low_std: -3
@@ -99,5 +100,5 @@ windows:
   software_window: HOlomon Photometric Software
   title_font:
   - times
-  - 30
+  - 17
   - bold

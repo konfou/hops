@@ -212,6 +212,7 @@ def initialise_window(window, window_name=None, exit_command=None):
 def setup_window(window, objects):
 
     main_font = tuple(read_main_log('windows', 'main_font'))
+    title_font = tuple(read_main_log('windows', 'title_font'))
     button_font = tuple(read_main_log('windows', 'button_font'))
     entries_bd = read_main_log('windows', 'entries_bd')
 
@@ -227,9 +228,15 @@ def setup_window(window, objects):
                 elif obj[0].winfo_class() == 'Entry':
                     obj[0].configure(bd=entries_bd, font=main_font)
                 elif obj[0].winfo_class() in ['Label', 'Radiobutton']:
-                    obj[0].configure(font=main_font)
+                    if len(obj) == 5:
+                        if obj[4] == 'title':
+                            obj[0].configure(font=title_font)
+                        else:
+                            obj[0].configure(font=main_font)
+                    else:
+                        obj[0].configure(font=main_font)
 
-                if len(obj) == 4:
+                if len(obj) >= 4:
                     obj[0].grid(row=row, column=obj[1], columnspan=obj[2], rowspan=obj[3])
                 elif len(obj) == 3:
                     obj[0].grid(row=row, column=obj[1], columnspan=obj[2])
