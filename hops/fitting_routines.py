@@ -213,75 +213,32 @@ def fitting():
         mcmc_fit.plot_corner(os.path.join(fitting_directory, 'correlations.pdf'))
         mcmc_fit.plot_traces(os.path.join(fitting_directory, 'traces.pdf'))
         mcmc_fit.plot_models(os.path.join(fitting_directory, 'model.pdf'), planet, [date])
-        mcmc_fit.plot_detrended_models(os.path.join(fitting_directory, 'detrended_model.pdf'), planet, [date])
+        figure = mcmc_fit.plot_detrended_models(os.path.join(fitting_directory, 'detrended_model.pdf'),
+                                                planet, [date], return_plot=True)
         mcmc_fit.save_models(os.path.join(fitting_directory, 'model.txt'))
         mcmc_fit.save_detrended_models(os.path.join(fitting_directory, 'detrended_model.txt'))
 
         shutil.copy('log.yaml', '{0}{1}log.yaml'.format(fitting_directory, os.sep))
 
-        # root.destroy()
+        root = Tk()
 
-        # root = Tk()
-        #
-        # exit_var_2 = BooleanVar(value=False)
-        #
-        # def break_and_exit():
-        #     exit_var_2.set(True)
-        #
-        # initialise_window(root, window_name=fitting_window, exit_command=break_and_exit)
-        #
-        # f = Figure(figsize=(7, 2 * 2))
-        # f.patch.set_facecolor('white')
-        # ax1 = f.add_subplot(211)
-        # ax2 = f.add_subplot(212)
-        # f.subplots_adjust(hspace=0)
-        # canvas = FigureCanvasTkAgg(f, master=root)
-        # canvas.show()
-        # canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-        #
-        # toolbar = NavigationToolbar2TkAgg(canvas, root)
-        # toolbar.update()
-        #
-        # data_delta_t = light_curve_0 - light_curve_0[0]
-        #
-        # def independent_f(detrend_zero, detrend_one, detrend_two, model_rp_over_rs, model_mid_time):
-        #
-        #     detrend = detrend_zero * (1 + detrend_one * data_delta_t + detrend_two * data_delta_t * data_delta_t)
-        #     transit_model = pylightcurve.transit(limb_darkening_coefficients, model_rp_over_rs, period,
-        #                                          sma_over_rs, eccentricity, inclination,
-        #                                          periastron, mid_time + model_mid_time,
-        #                                          time_array=light_curve_0)
-        #
-        #     return detrend, transit_model
-        #
-        # fitting_results =
-        #
-        # fit_detrend, fit_transit_model = independent_f(*popt)
-        #
-        # new_mid_time = (mid_time
-        #                 + round((np.mean(light_curve_0) - mid_time) / period) * period
-        #                 + popt[-1])
-        #
-        # phase = (light_curve_0 - new_mid_time) / period
-        #
-        # ax1.plot(phase, light_curve_1, 'ko', ms=3)
-        # ax1.plot(phase, fit_detrend * fit_transit_model, 'r-')
-        # ax1.set_yticks(ax1.get_yticks()[1:])
-        # ax1.tick_params(labelbottom='off')
-        # ax1.set_ylabel(r'$\mathrm{relative} \ \mathrm{flux}$', fontsize=20)
-        #
-        # ax2.plot(phase[1:-1][flag], light_curve_1[1:-1][flag] / fit_detrend, 'ko', ms=3)
-        # ax2.plot(phase[1:-1][flag], fit_transit_model, 'r-')
-        # ax2.plot(phase[1:-1][flag], predicted_transit_model, 'c-')
-        # ax2.set_ylabel(r'$\mathrm{normalised} \ \mathrm{flux}$', fontsize=20)
-        # ax2.set_xlabel(r'$\mathrm{phase}$', fontsize=20)
-        #
-        # finalise_window(root, topmost=True)
-        #
-        # while not exit_var_2.get():
-        #     root.update()
-        #
-        # root.destroy()
+        exit_var_2 = BooleanVar(value=False)
+
+        def break_and_exit():
+            exit_var_2.set(True)
+
+        initialise_window(root, exit_command=break_and_exit)
+
+        canvas = FigureCanvasTkAgg(figure[0], root)
+        canvas.get_tk_widget().pack()
+        NavigationToolbar2TkAgg(canvas, root)
+
+        finalise_window(root, topmost=True)
+
+        while not exit_var_2.get():
+            root.update()
+
+        root.destroy()
 
     else:
         root.destroy()

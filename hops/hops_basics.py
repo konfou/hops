@@ -24,9 +24,6 @@ from matplotlib.backend_bases import key_press_handler, MouseEvent
 import matplotlib.cm as cm
 import matplotlib.patches as mpatches
 from matplotlib.offsetbox import AnchoredText
-import gzip
-import socket
-import urllib
 import ttk
 import sys
 

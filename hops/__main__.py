@@ -793,6 +793,7 @@ def fitting_window():
 
     update_planet = BooleanVar(root, value=False)
     running = BooleanVar(root, value=False)
+    go_back = BooleanVar(root, value=False)
 
     # create widgets
 
@@ -870,6 +871,8 @@ def fitting_window():
     combostyle.theme_use('combostyle')
     planet_entry = ttk.Combobox(root, textvariable=planet, state='readonly')
     planet_search_entry = Entry(root, textvariable=planet_search)
+
+    return_to_photometry_button = Button(root, text='RETURN TO PHOTOMETRY')
 
     fitting_button = Button(root, text='FITTING')
 
@@ -965,6 +968,7 @@ def fitting_window():
             periastron_entry['state'] = DISABLED
             planet_entry['state'] = DISABLED
             planet_search_entry['state'] = DISABLED
+            return_to_photometry_button['state'] = DISABLED
             fitting_button['state'] = DISABLED
             exit_hops_button['state'] = DISABLED
 
@@ -988,6 +992,7 @@ def fitting_window():
             periastron_entry['state'] = DISABLED
             planet_entry['state'] = DISABLED
             planet_search_entry['state'] = DISABLED
+            return_to_photometry_button['state'] = DISABLED
             fitting_button['state'] = DISABLED
             exit_hops_button['state'] = NORMAL
 
@@ -1084,6 +1089,7 @@ def fitting_window():
             else:
                 fitting_button['state'] = DISABLED
 
+            return_to_photometry_button['state'] = NORMAL
             exit_hops_button['state'] = NORMAL
 
         planet_entry.selection_clear()
@@ -1110,6 +1116,31 @@ def fitting_window():
         update_planet.set(True)
         update_window('a')
         update_planet.set(False)
+
+    def return_to_photometry():
+
+        write_log('fitting', light_curve_file.get(), 'light_curve_file')
+        write_log('fitting', light_curve_file_short.get(), 'light_curve_file_short')
+        write_log('fitting', planet_search.get(), 'planet_search')
+        write_log('fitting', planet.get(), 'planet')
+        write_log('fitting', binning.get(), 'binning')
+        write_log('fitting', scatter.get(), 'scatter')
+        write_log('fitting', iterations.get(), 'iterations')
+        write_log('fitting', burn.get(), 'burn')
+        write_log('fitting', metallicity.get(), 'metallicity')
+        write_log('fitting', temperature.get(), 'temperature')
+        write_log('fitting', logg.get(), 'logg')
+        write_log('fitting', phot_filter.get(), 'phot_filter')
+        write_log('fitting', period.get(), 'period')
+        write_log('fitting', mid_time.get(), 'mid_time')
+        write_log('fitting', rp_over_rs.get(), 'rp_over_rs')
+        write_log('fitting', sma_over_rs.get(), 'sma_over_rs')
+        write_log('fitting', inclination.get(), 'inclination')
+        write_log('fitting', eccentricity.get(), 'eccentricity')
+        write_log('fitting', periastron.get(), 'periastron')
+
+        go_back.set(True)
+        root.destroy()
 
     def fitting():
 
@@ -1162,6 +1193,7 @@ def fitting_window():
     inclination_entry.bind(sequence='<KeyRelease>', func=update_window)
     eccentricity_entry.bind(sequence='<KeyRelease>', func=update_window)
     periastron_entry.bind(sequence='<KeyRelease>', func=update_window)
+    return_to_photometry_button['command'] = return_to_photometry
     fitting_button['command'] = fitting
     exit_hops_button['command'] = exit_hops
 
@@ -1190,6 +1222,8 @@ def fitting_window():
         [],
         [[fitting_button, 1]],
         [],
+        [[return_to_photometry_button, 1]],
+        [],
         [[exit_hops_button, 1]],
         [],
     ])
@@ -1199,8 +1233,12 @@ def fitting_window():
     finalise_window(root)
     root.mainloop()
 
+    return go_back.get()
+
 
 if __name__ == '__main__':
     reduction_alignment_window()
-    photometry_window()
-    fitting_window()
+    run = 1
+    while run == 1:
+        photometry_window()
+        run = fitting_window()

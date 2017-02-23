@@ -431,7 +431,7 @@ class TransitAndPolyFitting():
                         bbox_inches='tight', transparent=True)
             plt.close('all')
 
-    def plot_detrended_models(self, export_file, target=None, data_dates=None):
+    def plot_detrended_models(self, export_file, target=None, data_dates=None, return_plot=False):
 
         if target is None:
             target = ' '
@@ -440,6 +440,8 @@ class TransitAndPolyFitting():
             data_dates = map(str, ['set_' + ff for ff in range(1, self.total_sets + 1)])
 
         for set_number in range(self.total_sets):
+
+            plt.figure(set_number + 1)
 
             self.results = {ff: self.results[ff] for ff in self.results}
 
@@ -534,7 +536,10 @@ class TransitAndPolyFitting():
             plt.savefig(os.path.join(os.path.split(export_file)[0],
                                      'set_' + str(set_number + 1) + '_' + os.path.split(export_file)[1]),
                         bbox_inches='tight', transparent=True)
-            plt.close('all')
+            if return_plot:
+                return [plt.figure(ff + 1) for ff in range(self.total_sets)]
+            else:
+                plt.close('all')
 
     def save_models(self, export_file):
 
