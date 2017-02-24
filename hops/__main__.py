@@ -83,7 +83,7 @@ def reduction_alignment_window():
 
     show_header_button = Button(root, text='Show header')
 
-    reduction_alignment_button = Button(root, text='REDUCTION & ALIGNMENT')
+    reduction_alignment_button = Button(root, text='RUN REDUCTION & ALIGNMENT')
 
     # define the function that updates the window
 
@@ -518,7 +518,7 @@ def photometry_window():
 
     show_fov_button = Button(root, text='Show FOV')
 
-    photometry_button = Button(root, text='PHOTOMETRY')
+    photometry_button = Button(root, text='RUN PHOTOMETRY')
 
     proceed_to_fitting_button = Button(root, text='PROCEED TO FITTING')
 
@@ -888,7 +888,7 @@ def fitting_window():
 
     return_to_photometry_button = Button(root, text='RETURN TO PHOTOMETRY')
 
-    fitting_button = Button(root, text='FITTING')
+    fitting_button = Button(root, text='RUN FITTING')
 
     exit_hops_button = Button(root, text='EXIT')
 

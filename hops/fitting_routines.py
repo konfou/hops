@@ -204,7 +204,7 @@ def fitting():
                                          exp_time=0,
                                          time_factor=1,
                                          counter=False,
-                                         counter_window=True
+                                         counter_window='FITTING'
                                          )
 
         mcmc_fit.run_mcmc()
@@ -215,6 +215,9 @@ def fitting():
         mcmc_fit.plot_models(os.path.join(fitting_directory, 'model.pdf'), planet, [date])
         figure = mcmc_fit.plot_detrended_models(os.path.join(fitting_directory, 'detrended_model.pdf'),
                                                 planet, [date], return_plot=True)
+        figure[0].savefig(os.path.join(fitting_directory, 'set_1_detrended_model_300dpi.jpg'), dpi=300, bbox_inches='tight', transparent=True)
+        figure[0].savefig(os.path.join(fitting_directory, 'set_1_detrended_model_600dpi.jpg'), dpi=600, bbox_inches='tight', transparent=True)
+        figure[0].savefig(os.path.join(fitting_directory, 'set_1_detrended_model_900dpi.jpg'), dpi=900, bbox_inches='tight', transparent=True)
         mcmc_fit.save_models(os.path.join(fitting_directory, 'model.txt'))
         mcmc_fit.save_detrended_models(os.path.join(fitting_directory, 'detrended_model.txt'))
 
