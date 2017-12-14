@@ -1,5 +1,76 @@
 from hops_basics import *
 
+def initialise_window(window, window_name=None, exit_command=None):
+
+    if not window_name:
+        window_name = read_main_log('windows', 'software_window')
+
+    if not exit_command:
+        def exit_command():
+            os._exit(-1)
+
+    window.wm_title(window_name)
+    window.protocol('WM_DELETE_WINDOW', exit_command)
+
+    window.withdraw()
+
+
+def setup_window(window, objects):
+
+    main_font = tuple(read_main_log('windows', 'main_font'))
+    title_font = tuple(read_main_log('windows', 'title_font'))
+    button_font = tuple(read_main_log('windows', 'button_font'))
+    entries_bd = read_main_log('windows', 'entries_bd')
+
+    for row in range(len(objects)):
+        if len(objects[row]) == 0:
+            label_empty = Label(window, text='')
+            label_empty.grid(row=row, column=100)
+        else:
+            for obj in objects[row]:
+
+                if obj[0].winfo_class() == 'Button':
+                    obj[0].configure(font=button_font)
+                elif obj[0].winfo_class() == 'Entry':
+                    obj[0].configure(bd=entries_bd, font=main_font)
+                elif obj[0].winfo_class() in ['Label', 'Radiobutton']:
+                    if len(obj) == 5:
+                        if obj[4] == 'title':
+                            obj[0].configure(font=title_font)
+                        else:
+                            obj[0].configure(font=main_font)
+                    else:
+                        obj[0].configure(font=main_font)
+
+                if len(obj) >= 4:
+                    obj[0].grid(row=row, column=obj[1], columnspan=obj[2], rowspan=obj[3])
+                elif len(obj) == 3:
+                    obj[0].grid(row=row, column=obj[1], columnspan=obj[2])
+                else:
+                    obj[0].grid(row=row, column=obj[1])
+
+
+def finalise_window(window, center=True, topmost=False):
+
+    window.update_idletasks()
+
+    if center:
+        x = (window.winfo_screenwidth() - window.winfo_reqwidth()) / 2
+        y = (window.winfo_screenheight() - window.winfo_reqheight()) / 2
+        window.geometry('+%d+%d' % (x, y))
+
+    else:
+        window.geometry('+%d+%d' % (0, 0))
+
+    window.update_idletasks()
+
+    window.lift()
+    window.wm_attributes("-topmost", 1)
+    # if not topmost:
+    window.after_idle(window.attributes, '-topmost', 0)
+
+    window.deiconify()
+
 
 def photometry():
 
@@ -79,23 +150,23 @@ def photometry():
 
         fits = pf.open(science_file)
 
-        if fits[0].header[align_x0_key]:
+        if fits[1].header[align_x0_key]:
 
             targets_files.append(science_file)
 
             # calculate heliocentric julian date
 
             if observation_date_key == observation_time_key:
-                local_time = ' '.join(fits[0].header[observation_date_key].split('T'))
+                local_time = ' '.join(fits[1].header[observation_date_key].split('T'))
                 if counter == 1:
-                    write_log('fitting', fits[0].header[observation_date_key].split('T')[0], 'date')
+                    write_log('fitting', fits[1].header[observation_date_key].split('T')[0], 'date')
             else:
-                local_time = ' '.join([fits[0].header[observation_date_key], fits[0].header[observation_time_key]])
+                local_time = ' '.join([fits[1].header[observation_date_key], fits[1].header[observation_time_key]])
                 if counter == 1:
-                    write_log('fitting', fits[0].header[observation_date_key], 'date')
+                    write_log('fitting', fits[1].header[observation_date_key], 'date')
 
             julian_date = (ephem.julian_date(float(ephem.Date(local_time))) +
-                           fits[0].header[exposure_time_key] / (2.0 * 60.0 * 60.0 * 24.0))
+                           fits[1].header[exposure_time_key] / (2.0 * 60.0 * 60.0 * 24.0))
 
             ra_target, dec_target = target_ra_dec.split()
 
@@ -105,16 +176,16 @@ def photometry():
 
             # calculate gauss position, flux and sky and aperture flux and sky
 
-            ref_x_position = fits[0].header[align_x0_key]
-            ref_y_position = fits[0].header[align_y0_key]
-            ref_u_position = fits[0].header[align_u0_key]
+            ref_x_position = fits[1].header[align_x0_key]
+            ref_y_position = fits[1].header[align_y0_key]
+            ref_u_position = fits[1].header[align_u0_key]
 
             for target in range(max_comparisons + 1):
 
                 if targets_aperture[target] > 0:
 
                     norm, floor, x_mean, y_mean, x_std, y_std = \
-                        tools.fit_2d_gauss(fits[0].data,
+                        tools.fit_2d_gauss(fits[1].data,
                                            predicted_x_mean=(ref_x_position + targets_r_position[target] *
                                                              np.cos(ref_u_position + targets_u_position[target])),
                                            predicted_y_mean=(ref_y_position + targets_r_position[target] *
@@ -128,7 +199,7 @@ def photometry():
                     targets_gauss_flux.append(2 * np.pi * norm * x_std * y_std)
                     targets_gauss_sky.append(floor)
 
-                    flux_area = fits[0].data[int(y_mean) - targets_aperture[target]:
+                    flux_area = fits[1].data[int(y_mean) - targets_aperture[target]:
                                              int(y_mean) + targets_aperture[target] + 1,
                                              int(x_mean) - targets_aperture[target]:
                                              int(x_mean) + targets_aperture[target] + 1]
@@ -137,12 +208,12 @@ def photometry():
 
                     sky_area_1 = int(sky_inner_aperture * targets_aperture[target])
                     sky_area_2 = int(sky_outer_aperture * targets_aperture[target])
-                    fits[0].data[int(y_mean) - sky_area_1:int(y_mean) + sky_area_1 + 1,
+                    fits[1].data[int(y_mean) - sky_area_1:int(y_mean) + sky_area_1 + 1,
                                  int(x_mean) - sky_area_1:int(x_mean) + sky_area_1 + 1] = 0
-                    sky_area = fits[0].data[int(y_mean) - sky_area_2:int(y_mean) + sky_area_2 + 1,
+                    sky_area = fits[1].data[int(y_mean) - sky_area_2:int(y_mean) + sky_area_2 + 1,
                                             int(x_mean) - sky_area_2:int(x_mean) + sky_area_2 + 1]
                     sky_area = sky_area[np.where((sky_area > 0) &
-                                                 (sky_area < fits[0].header[mean_key] + 3 * fits[0].header[std_key]))]
+                                                 (sky_area < fits[1].header[mean_key] + 3 * fits[1].header[std_key]))]
                     sky = np.sum(sky_area)
                     sky_pixels = sky_area.size
 

@@ -1,8 +1,8 @@
 alignment:
   burn_limit: 65000
-  calibration_stars_number: 10
+  calibration_stars_number: 5
   search_window_std: 10
-  shift_tolerance: 100
+  shift_tolerance_p: 10
   star_std: 2
 fitting:
   binning: 1
@@ -35,6 +35,7 @@ fitting:
   sma_over_rs_fit: false
   temperature: 0.0
 photometry:
+  auto_target_ra_dec: None detected
   max_comparisons: 10
   sky_inner_aperture: 1.7
   sky_outer_aperture: 2.4
@@ -42,10 +43,11 @@ photometry:
   target_ra_dec: hh:mm:ss +dd:mm:ss
   target_x_position: 0
   target_y_position: 0
+  use_auto_target_ra_dec: true
 pipeline:
   alignment_complete: false
-  directory: /Users/angelos/Desktop/TrES-2b
-  directory_short: Desktop/TrES-2b
+  directory: /Users/angelos/Desktop/test_nick
+  directory_short: Desktop/test_nick
   fitting_directory: FITTING
   fov_figure: FOV.pdf
   light_curve_aperture_file: PHOTOMETRY_APERTURE.txt
@@ -57,7 +59,9 @@ pipeline:
   reduction_complete: false
   reduction_directory: REDUCED_DATA
   reduction_prefix: out_
-  results_figure: REULTS.pdf
+  reduction_trash_directory: REDUCED_DATA_TRASH
+  results_figure: RESULTS.pdf
+  trash: []
 pipeline_keywords:
   align_star_area_key: ALIGN_SA
   align_u0_key: ALIGN_U0
@@ -75,7 +79,7 @@ reduction:
   flat_files: flat
   master_bias_method: median
   master_dark_method: median
-  master_flat_method: mean
+  master_flat_method: median
 windows:
   alignment_window: ALIGNMENT
   button_font:

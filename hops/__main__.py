@@ -1,5 +1,3 @@
-__version__ = 1.2
-
 print 'Loading... Please wait for the main window to appear.'
 
 from hops_basics import *
@@ -8,9 +6,121 @@ import alignment_routines as alr
 import photometry_routines as phr
 import fitting_routines as ftr
 
-import exodata
-import exodata.astroquantities as aq
-from oec import *
+
+def initialise_window(window, window_name, windows_to_hide, windows_to_close, exit_python, other_exit_command=None):
+
+    def exit_command():
+
+        for i in windows_to_close:
+            i.destroy()
+
+        for i in windows_to_hide:
+            i.withdraw()
+
+        if other_exit_command:
+            other_exit_command()
+
+        if exit_python:
+            os._exit(-1)
+
+    window.wm_title(window_name)
+    window.protocol('WM_DELETE_WINDOW', exit_command)
+
+    window.withdraw()
+
+
+def setup_window(window, objects, title_font=None, main_font=None, button_font=None, entries_bd=3):
+
+    if button_font is None:
+        button_font = ['times', 15, 'bold']
+
+    if main_font is None:
+        main_font = ['times', 15]
+
+    if title_font is None:
+        title_font = ['times', 17, 'bold']
+
+    for row in range(len(objects)):
+        if len(objects[row]) == 0:
+            label_empty = Label(window, text='')
+            label_empty.grid(row=row, column=100)
+        else:
+            for obj in objects[row]:
+
+                if obj[0].winfo_class() == 'Button':
+                    obj[0].configure(font=button_font)
+                elif obj[0].winfo_class() == 'Entry':
+                    obj[0].configure(bd=entries_bd, font=main_font)
+                elif obj[0].winfo_class() in ['Label', 'Radiobutton']:
+                    if len(obj) == 5:
+                        if obj[4] == 'title':
+                            obj[0].configure(font=title_font)
+                        else:
+                            obj[0].configure(font=main_font)
+                    else:
+                        obj[0].configure(font=main_font)
+
+                if len(obj) >= 4:
+                    obj[0].grid(row=row, column=obj[1], columnspan=obj[2], rowspan=obj[3])
+                elif len(obj) == 3:
+                    obj[0].grid(row=row, column=obj[1], columnspan=obj[2])
+                else:
+                    obj[0].grid(row=row, column=obj[1])
+
+
+def finalise_window(window, position=5):
+
+    window.update_idletasks()
+
+    if position == 1:
+        x = 0
+        y = 0
+
+    elif position == 2:
+        x = (window.winfo_screenwidth() - window.winfo_reqwidth()) / 2
+        y = 0
+
+    elif position == 3:
+        x = window.winfo_screenwidth() - window.winfo_reqwidth()
+        y = 0
+
+    elif position == 4:
+        x = 0
+        y = (window.winfo_screenheight() - window.winfo_reqheight()) / 2
+
+    elif position == 5:
+        x = (window.winfo_screenwidth() - window.winfo_reqwidth()) / 2
+        y = (window.winfo_screenheight() - window.winfo_reqheight()) / 2
+
+    elif position == 6:
+        x = window.winfo_screenwidth() - window.winfo_reqwidth()
+        y = (window.winfo_screenheight() - window.winfo_reqheight()) / 2
+
+    elif position == 7:
+        x = 0
+        y = window.winfo_screenheight() - window.winfo_reqheight()
+
+    elif position == 8:
+        x = (window.winfo_screenwidth() - window.winfo_reqwidth()) / 2
+        y = window.winfo_screenheight() - window.winfo_reqheight()
+
+    elif position == 9:
+        x = window.winfo_screenwidth() - window.winfo_reqwidth()
+        y = window.winfo_screenheight() - window.winfo_reqheight()
+
+    else:
+        x = 0
+        y = 0
+
+    window.geometry('+%d+%d' % (x, y))
+
+    window.update_idletasks()
+
+    window.lift()
+    window.wm_attributes("-topmost", 1)
+    window.after_idle(window.attributes, '-topmost', 0)
+
+    window.deiconify()
 
 
 def reduction_alignment_window():
@@ -20,7 +130,7 @@ def reduction_alignment_window():
     # #########
 
     root = Tk()
-    initialise_window(root)
+    initialise_window(root, 'Reduction & Alignment', [], [root], True)
 
     # get variables from log and set as tk variables those to be modified
 
@@ -34,6 +144,8 @@ def reduction_alignment_window():
     observation_date_key = StringVar(root, value=read_main_log('pipeline_keywords', 'observation_date_key'))
     observation_time_key = StringVar(root, value=read_main_log('pipeline_keywords', 'observation_time_key'))
     target_ra_dec = StringVar(root, value=read_main_log('photometry', 'target_ra_dec'))
+    auto_target_ra_dec = StringVar(root, value=read_main_log('photometry', 'auto_target_ra_dec'))
+    use_auto_target_ra_dec = BooleanVar(root, value=read_main_log('photometry', 'use_auto_target_ra_dec'))
 
     # set progress variables, useful for updating the window
 
@@ -77,20 +189,24 @@ def reduction_alignment_window():
     observation_time_key_entry = Entry(root, textvariable=observation_time_key)
     observation_time_key_test = Label(root, text=' ')
 
-    target_ra_dec_label = Label(root, text='Target RA DEC\n(hh:mm:ss +/-dd:mm:ss)')
+    auto_target_ra_dec_label = Label(root, text='Detected target RA DEC')
+    auto_target_ra_dec_entry = Label(root, text=auto_target_ra_dec.get())
+    use_auto_target_ra_dec_entry = Checkbutton(root, text='Use detected values', variable=use_auto_target_ra_dec)
+
+    target_ra_dec_label = Label(root, text='Manual target RA DEC\n(hh:mm:ss +/-dd:mm:ss)')
     target_ra_dec_entry = Entry(root, textvariable=target_ra_dec)
     target_ra_dec_test = Label(root, text=' ')
 
     show_header_button = Button(root, text='Show header')
 
-    reduction_alignment_button = Button(root, text='RUN REDUCTION & ALIGNMENT')
+    run_reduction_alignment_button = Button(root, text='RUN REDUCTION & ALIGNMENT')
 
     # define the function that updates the window
 
-    def update_window(entry):
+    def update_window(*entry):
 
         if not entry:
-            return 0
+            pass
 
         if running.get():
 
@@ -104,8 +220,9 @@ def reduction_alignment_window():
             observation_date_key_entry['state'] = DISABLED
             observation_time_key_entry['state'] = DISABLED
             target_ra_dec_entry['state'] = DISABLED
+            use_auto_target_ra_dec_entry['state'] = DISABLED
             show_header_button['state'] = DISABLED
-            reduction_alignment_button['state'] = DISABLED
+            run_reduction_alignment_button['state'] = DISABLED
 
         elif not os.path.isdir(directory.get()):
 
@@ -119,8 +236,9 @@ def reduction_alignment_window():
             observation_date_key_entry['state'] = DISABLED
             observation_time_key_entry['state'] = DISABLED
             target_ra_dec_entry['state'] = DISABLED
+            use_auto_target_ra_dec_entry['state'] = DISABLED
             show_header_button['state'] = DISABLED
-            reduction_alignment_button['state'] = DISABLED
+            run_reduction_alignment_button['state'] = DISABLED
 
         else:
 
@@ -139,6 +257,7 @@ def reduction_alignment_window():
                 observation_date_key.set(read_log('pipeline_keywords', 'observation_date_key'))
                 observation_time_key.set(read_log('pipeline_keywords', 'observation_time_key'))
                 target_ra_dec.set(read_log('photometry', 'target_ra_dec'))
+                use_auto_target_ra_dec.set(read_log('photometry', 'use_auto_target_ra_dec'))
 
             observation_files_entry['state'] = NORMAL
             bias_files_entry['state'] = NORMAL
@@ -168,12 +287,14 @@ def reduction_alignment_window():
                 observation_date_key_entry['state'] = DISABLED
                 observation_time_key_entry['state'] = DISABLED
                 target_ra_dec_entry['state'] = DISABLED
+                use_auto_target_ra_dec_entry['state'] = DISABLED
                 show_header_button['state'] = DISABLED
-                reduction_alignment_button['state'] = DISABLED
+                run_reduction_alignment_button['state'] = DISABLED
 
             else:
 
                 target_ra_dec_entry['state'] = NORMAL
+                use_auto_target_ra_dec_entry['state'] = NORMAL
                 exposure_time_key_entry['state'] = NORMAL
                 observation_date_key_entry['state'] = NORMAL
                 observation_time_key_entry['state'] = NORMAL
@@ -182,6 +303,22 @@ def reduction_alignment_window():
                     show_header_button['state'] = DISABLED
                 else:
                     show_header_button['state'] = NORMAL
+
+                check_ra = test_fits_keyword(observation_files_entry.get(), 'OBJCTRA')
+                check_dec = test_fits_keyword(observation_files_entry.get(), 'OBJCTDEC')
+                if check_ra[0] and check_dec[0]:
+                    auto_target_ra_dec_entry.configure(
+                        text=check_ra[2].replace(' ', ':') + ' ' + check_dec[2].replace(' ', ':'))
+                    use_auto_target_ra_dec_entry['state'] = NORMAL
+                else:
+                    use_auto_target_ra_dec.set(0)
+                    use_auto_target_ra_dec_entry['state'] = DISABLED
+
+                if use_auto_target_ra_dec.get():
+                    target_ra_dec.set(check_ra[2].replace(' ', ':') + ' ' + check_dec[2].replace(' ', ':'))
+                    target_ra_dec_entry['state'] = DISABLED
+                else:
+                    target_ra_dec_entry['state'] = NORMAL
 
                 check_ra_dec = test_coordinates(target_ra_dec_entry.get())
                 target_ra_dec_test.configure(text=check_ra_dec[1])
@@ -194,6 +331,11 @@ def reduction_alignment_window():
                                                            observation_date_key_entry.get())
                 observation_date_key_test.configure(text=check_observation_date[1])
 
+                if check_observation_date[0]:
+                    if len(check_observation_date[2].split('T')) == 2:
+                        observation_time_key.set(observation_date_key_entry.get())
+                        observation_time_key_entry['state'] = DISABLED
+
                 check_observation_time = test_fits_keyword(observation_files_entry.get(),
                                                            observation_time_key_entry.get())
                 observation_time_key_test.configure(text=check_observation_time[1])
@@ -202,16 +344,14 @@ def reduction_alignment_window():
                         check_observation_date[0] and check_observation_time[0]
                         and not open_root2.get() and not open_root3.get()):
 
-                    reduction_alignment_button['state'] = NORMAL
+                    run_reduction_alignment_button['state'] = NORMAL
 
                 else:
 
-                    reduction_alignment_button['state'] = DISABLED
-
-        root.update()
+                    run_reduction_alignment_button['state'] = DISABLED
 
     update_directory = BooleanVar(root, value=True)
-    update_window('a')
+    update_window(None)
     update_directory = BooleanVar(root, value=False)
 
     # define actions for the different buttons, including calls to the function that updates the window
@@ -233,17 +373,17 @@ def reduction_alignment_window():
     def show_content():
 
         open_root2.set(True)
-        update_window('a')
+        update_window(None)
 
         root2 = Tk()
-        root2.geometry('{0}x{1}'.format(root2.winfo_screenwidth() / 3, int(0.8 * root2.winfo_screenheight())))
+        root2.geometry('{0}x{1}'.format(root2.winfo_screenwidth() / 3, root2.winfo_screenheight() / 3))
+        root2.update_idletasks()
 
         def root2_close():
-            root2.destroy()
             open_root2.set(False)
-            update_window('a')
+            update_window(None)
 
-        initialise_window(root2, window_name='Files list', exit_command=root2_close)
+        initialise_window(root2, 'Files list', [], [root2], False, other_exit_command=root2_close)
 
         scrollbar = Scrollbar(root2)
         scrollbar.pack(side=RIGHT, fill=Y)
@@ -258,23 +398,23 @@ def reduction_alignment_window():
         files_list.pack(side=LEFT, fill=BOTH, expand=True)
         scrollbar.config(command=files_list.yview)
 
-        finalise_window(root2, center=False, topmost=True)
+        finalise_window(root2, position=1)
         root2.mainloop()
 
     def show_header():
 
         open_root3.set(True)
-        update_window('a')
+        update_window(None)
 
         root3 = Tk()
-        root3.geometry('{0}x{1}'.format(root3.winfo_screenwidth() / 3, int(0.8 * root3.winfo_screenheight())))
+        root3.geometry('{0}x{1}'.format(root3.winfo_screenwidth() / 3, root3.winfo_screenheight() / 3))
+        root3.update_idletasks()
 
         def root3_close():
-            root3.destroy()
             open_root3.set(False)
-            update_window('a')
+            update_window(None)
 
-        initialise_window(root3, window_name='Fits file header', exit_command=root3_close)
+        initialise_window(root3, 'Fits file header', [], [root3], False, other_exit_command=root3_close)
 
         scrollbar = Scrollbar(root3)
         scrollbar.pack(side=RIGHT, fill=Y)
@@ -293,13 +433,13 @@ def reduction_alignment_window():
         header_list.pack(side=LEFT, fill=BOTH, expand=True)
         scrollbar.config(command=header_list.yview)
 
-        finalise_window(root3, center=False, topmost=True)
+        finalise_window(root3, position=7)
         root3.mainloop()
 
-    def reduction_alignment():
+    def run_reduction_alignment():
 
         running.set(True)
-        update_window('a')
+        update_window(None)
 
         write_log('pipeline', directory.get(), 'directory')
         write_log('pipeline', directory_short.get(), 'directory_short')
@@ -308,6 +448,7 @@ def reduction_alignment_window():
         write_log('reduction', dark_files.get(), 'dark_files')
         write_log('reduction', flat_files.get(), 'flat_files')
         write_log('photometry', target_ra_dec.get(), 'target_ra_dec')
+        write_log('photometry', use_auto_target_ra_dec.get(), 'use_auto_target_ra_dec')
         write_log('pipeline_keywords', exposure_time_key.get(), 'exposure_time_key')
         write_log('pipeline_keywords', observation_date_key.get(), 'observation_date_key')
         write_log('pipeline_keywords', observation_time_key.get(), 'observation_time_key')
@@ -321,7 +462,7 @@ def reduction_alignment_window():
             root.destroy()
         else:
             running.set(False)
-            update_window('a')
+            update_window(None)
 
     # connect actions to widgets
 
@@ -334,9 +475,10 @@ def reduction_alignment_window():
     exposure_time_key_entry.bind(sequence='<KeyRelease>', func=update_window)
     observation_date_key_entry.bind(sequence='<KeyRelease>', func=update_window)
     observation_time_key_entry.bind(sequence='<KeyRelease>', func=update_window)
+    use_auto_target_ra_dec_entry['command'] = update_window
     target_ra_dec_entry.bind(sequence='<KeyRelease>', func=update_window)
     show_header_button['command'] = show_header
-    reduction_alignment_button['command'] = reduction_alignment
+    run_reduction_alignment_button['command'] = run_reduction_alignment
 
     # setup window
 
@@ -358,6 +500,8 @@ def reduction_alignment_window():
         [],
         [[show_files_button, 2]],
         [],
+        [[auto_target_ra_dec_label, 1], [auto_target_ra_dec_entry, 2]],
+        [[use_auto_target_ra_dec_entry, 2]],
         [[target_ra_dec_label, 1], [target_ra_dec_entry, 2], [target_ra_dec_test, 3]],
         [[exposure_time_key_label, 1], [exposure_time_key_entry, 2], [exposure_time_key_test, 3]],
         [[observation_date_key_label, 1], [observation_date_key_entry, 2], [observation_date_key_test, 3]],
@@ -365,13 +509,13 @@ def reduction_alignment_window():
         [],
         [[show_header_button, 2]],
         [],
-        [[reduction_alignment_button, 1, 3]],
+        [[run_reduction_alignment_button, 1, 3]],
         [],
     ])
 
     # finalise and show window
 
-    finalise_window(root)
+    finalise_window(root, position=5)
     root.mainloop()
 
 
@@ -384,20 +528,12 @@ def photometry_window():
     root = Tk()
     root4 = Tk()
 
-    def phot_exit():
-        root.destroy()
-        root4.destroy()
-        os._exit(0)
-
     def root4_close():
-
         open_root4.set(False)
-        update_window('a')
+        update_window(None)
 
-        root4.withdraw()
-
-    initialise_window(root, exit_command=phot_exit)
-    initialise_window(root4, exit_command=root4_close)
+    initialise_window(root, 'Photometry', [], [root, root4], True)
+    initialise_window(root4, 'FOV', [root4], [], False, other_exit_command=root4_close)
 
     # get variables from log and set as tk variables those to be modified
 
@@ -449,7 +585,7 @@ def photometry_window():
 
     # create the plot in the additional window
 
-    fits = pf.open(glob.glob('{0}{1}*{2}*.f*t*'.format(reduction_directory, os.sep, observation_files))[0],
+    fits = pf.open(glob.glob('{0}{1}*.f*t*'.format(reduction_directory, os.sep))[0],
                    memmap=False)
     f = Figure()
     f.patch.set_facecolor('white')
@@ -458,9 +594,9 @@ def photometry_window():
     canvas.get_tk_widget().pack()
     NavigationToolbar2TkAgg(canvas, root4)
 
-    ax.imshow(fits[0].data, origin='lower', cmap=cm.Greys_r,
-              vmin=fits[0].header[mean_key] + frame_low_std * fits[0].header[std_key],
-              vmax=fits[0].header[mean_key] + frame_upper_std * fits[0].header[std_key])
+    ax.imshow(fits[1].data, origin='lower', cmap=cm.Greys_r,
+              vmin=fits[1].header[mean_key] + frame_low_std * fits[1].header[std_key],
+              vmax=fits[1].header[mean_key] + frame_upper_std * fits[1].header[std_key])
 
     targets_box = [mpatches.Rectangle((targets_x_position[0].get() - targets_aperture[0].get(),
                                        targets_y_position[0].get() - targets_aperture[0].get()),
@@ -554,19 +690,19 @@ def photometry_window():
                     if (event.xdata, event.ydata) == (click_test_x.get(), click_test_y.get()):
 
                         frame_limit = 2 * search_window_std * star_std
-                        centroids = tools.find_centroids(fits[0].data,
+                        centroids = tools.find_centroids(fits[1].data,
                                                          x_low=int(event.xdata - frame_limit),
                                                          x_upper=int(event.xdata + frame_limit),
                                                          y_low=int(event.ydata - frame_limit),
                                                          y_upper=int(event.ydata + frame_limit),
                                                          x_centre=int(event.xdata), y_centre=int(event.ydata),
-                                                         mean=fits[0].header[mean_key], std=fits[0].header[std_key],
+                                                         mean=fits[1].header[mean_key], std=fits[1].header[std_key],
                                                          std_limit=3.0, burn_limit=burn_limit, star_std=star_std)
 
                         if centroids.size > 0:
 
                             norm, floor, x_mean, y_mean, x_sigma, y_sigma = \
-                                tools.fit_2d_gauss(fits[0].data,
+                                tools.fit_2d_gauss(fits[1].data,
                                                    predicted_x_mean=centroids[0][1], predicted_y_mean=centroids[0][2],
                                                    search_window=search_window_std * star_std)
 
@@ -652,23 +788,21 @@ def photometry_window():
                 proceed_to_fitting_button['state'] = DISABLED
 
         canvas.draw()
-        root.update()
-        root4.update()
 
-    update_window('a')
+    update_window(None)
 
     # define actions for the different buttons, including calls to the function that updates the window
 
     def photometry():
 
         running.set(True)
-        update_window('a')
+        update_window(None)
 
         write_log('photometry', targets_x_position[0].get(), 'target_x_position')
         write_log('photometry', targets_y_position[0].get(), 'target_y_position')
         write_log('photometry', targets_aperture[0].get(), 'target_aperture')
         target_polar = tools.cartesian_to_polar(targets_x_position[0].get(), targets_y_position[0].get(),
-                                                fits[0].header[align_x0_key], fits[0].header[align_y0_key])
+                                                fits[1].header[align_x0_key], fits[1].header[align_y0_key])
         write_log('photometry', float(target_polar[0]), 'target_r_position')
         write_log('photometry', float(target_polar[1]), 'target_u_position')
 
@@ -684,7 +818,7 @@ def photometry_window():
 
                 target_polar = tools.cartesian_to_polar(targets_x_position[i_comparison + 1].get(),
                                                         targets_y_position[i_comparison + 1].get(),
-                                                        fits[0].header[align_x0_key], fits[0].header[align_y0_key])
+                                                        fits[1].header[align_x0_key], fits[1].header[align_y0_key])
 
             else:
 
@@ -697,19 +831,19 @@ def photometry_window():
         phr.photometry()
 
         running.set(False)
-        update_window('a')
+        update_window(None)
 
     def show_fov():
 
         if not finalised_root4.get():
             finalised_root4.set(True)
             open_root4.set(True)
-            update_window('a')
-            finalise_window(root4, center=False, topmost=True)
+            update_window(None)
+            finalise_window(root4, position=1)
 
         else:
             open_root4.set(True)
-            update_window('a')
+            update_window(None)
             root4.deiconify()
 
     def proceed_to_fitting():
@@ -763,7 +897,7 @@ def photometry_window():
 
     # finalise and show window
 
-    finalise_window(root)
+    finalise_window(root, position=5)
 
     root.mainloop()
     root4.mainloop()
@@ -772,17 +906,29 @@ def photometry_window():
 def fitting_window():
 
     # #########
-    # create and initialise fitting window
+    # create and initialise window
     # #########
 
     root = Tk()
-    initialise_window(root)
+    root5 = Tk()
+
+    def root5_close():
+        open_root5.set(False)
+        update_window(None)
+
+    initialise_window(root, 'Fitting', [], [root, root5], True)
+    initialise_window(root5, 'Light-curve', [root5], [], False, other_exit_command=root5_close)
 
     # get variables from log and set as tk variables those to be modified
 
-    catalogue = exodata.OECDatabase(oec(), stream=True)
+    catalogue = plc.oec_catalogue()
 
     light_curve_file = StringVar(value=read_log('fitting', 'light_curve_file'))
+
+    light_curve_aperture_file = read_log('pipeline', 'light_curve_aperture_file')
+    photometry_directory = read_log('pipeline', 'photometry_directory')
+    light_curve_file.set(glob.glob(os.path.join(photometry_directory + '*', light_curve_aperture_file))[-1])
+
     light_curve_file_short = StringVar(value=os.path.split(light_curve_file.get())[1])
     light_curve_dir_short = StringVar(value=os.path.split(os.path.split(light_curve_file.get())[0])[1])
     planet_search = StringVar(value=read_log('fitting', 'planet_search'))
@@ -805,9 +951,21 @@ def fitting_window():
 
     # set progress variables, useful for updating the window
 
+    open_root5 = BooleanVar(root, value=False)
+    finalised_root5 = BooleanVar(root, value=False)
+    update_preview = BooleanVar(root, value=True)
     update_planet = BooleanVar(root, value=False)
     running = BooleanVar(root, value=False)
-    go_back = BooleanVar(root, value=False)
+
+    # create the plot in the additional window
+
+    f = Figure()
+    f.patch.set_facecolor('white')
+    ax1 = f.add_subplot(211)
+    ax2 = f.add_subplot(212)
+    canvas = FigureCanvasTkAgg(f, root5)
+    canvas.get_tk_widget().pack()
+    NavigationToolbar2TkAgg(canvas, root5)
 
     # create widgets
 
@@ -886,6 +1044,8 @@ def fitting_window():
     planet_entry = ttk.Combobox(root, textvariable=planet, state='readonly')
     planet_search_entry = Entry(root, textvariable=planet_search)
 
+    show_preview_button = Button(root, text='Show/Update Preview')
+
     return_to_photometry_button = Button(root, text='RETURN TO PHOTOMETRY')
 
     fitting_button = Button(root, text='RUN FITTING')
@@ -897,7 +1057,7 @@ def fitting_window():
     def update_window(entry):
 
         if not entry:
-            return 0
+            pass
 
         if planet.get() == 'Choose Planet':
 
@@ -917,50 +1077,17 @@ def fitting_window():
             planet.set(catalogue_planets[0][1])
             planet_search.set(catalogue_planets[0][1])
 
-            catalogue_planet = catalogue.searchPlanet(planet.get())
-
-            if not np.isnan(catalogue_planet.star.Z):
-                metallicity.set(catalogue_planet.star.Z)
-            else:
-                metallicity.set(0.0)
-            if not np.isnan(catalogue_planet.star.T):
-                temperature.set(float(catalogue_planet.star.T))
-            else:
-                temperature.set(0.0)
-            if not np.isnan(catalogue_planet.star.calcLogg()):
-                logg.set(round(float(catalogue_planet.star.calcLogg()), 3))
-            else:
-                logg.set(0.0)
-            if not np.isnan(catalogue_planet.P):
-                period.set(float(catalogue_planet.P))
-            else:
-                period.set(0.0)
-            if not np.isnan(catalogue_planet.transittime):
-                mid_time.set(float(catalogue_planet.transittime))
-            else:
-                mid_time.set(0.0)
-            if not np.isnan(catalogue_planet.R) and not np.isnan(catalogue_planet.star.R):
-                rp_over_rs.set(
-                    round(float(catalogue_planet.R.rescale(aq.m) / catalogue_planet.star.R.rescale(aq.m)), 5))
-            else:
-                rp_over_rs.set(0.0)
-            if not np.isnan(catalogue_planet.calcSMA()) and not np.isnan(catalogue_planet.star.R):
-                sma_over_rs.set(round(float(catalogue_planet.calcSMA().rescale(aq.m) /
-                                            catalogue_planet.star.R.rescale(aq.m)), 5))
-            else:
-                sma_over_rs.set(0.0)
-            if not np.isnan(catalogue_planet.i):
-                inclination.set(float(catalogue_planet.i))
-            else:
-                inclination.set(0.0)
-            if not np.isnan(catalogue_planet.e):
-                eccentricity.set(float(catalogue_planet.e))
-            else:
-                eccentricity.set(0.0)
-            if not np.isnan(catalogue_planet.periastron):
-                periastron.set(float(catalogue_planet.periastron))
-            else:
-                periastron.set(0.0)
+            parameters = plc.find_oec_parameters(planet.get(), catalogue=catalogue)
+            logg.set(parameters[1])
+            temperature.set(parameters[2])
+            metallicity.set(parameters[3])
+            rp_over_rs.set(parameters[4])
+            period.set(parameters[6])
+            sma_over_rs.set(parameters[7])
+            eccentricity.set(parameters[8])
+            inclination.set(parameters[9])
+            periastron.set(parameters[10])
+            mid_time.set(parameters[11])
 
         if running.get():
 
@@ -1040,49 +1167,17 @@ def fitting_window():
 
             if update_planet.get():
 
-                obj_planet = catalogue.searchPlanet(planet.get())
-
-                if not np.isnan(obj_planet.star.Z):
-                    metallicity.set(obj_planet.star.Z)
-                else:
-                    metallicity.set(0.0)
-                if not np.isnan(obj_planet.star.T):
-                    temperature.set(float(obj_planet.star.T))
-                else:
-                    temperature.set(0.0)
-                if not np.isnan(obj_planet.star.calcLogg()):
-                    logg.set(round(float(obj_planet.star.calcLogg()), 3))
-                else:
-                    logg.set(0.0)
-                if not np.isnan(obj_planet.P):
-                    period.set(float(obj_planet.P))
-                else:
-                    period.set(0.0)
-                if not np.isnan(obj_planet.transittime):
-                    mid_time.set(float(obj_planet.transittime))
-                else:
-                    mid_time.set(0.0)
-                if not np.isnan(obj_planet.R) and not np.isnan(obj_planet.star.R):
-                    rp_over_rs.set(round(float(obj_planet.R.rescale(aq.m) / obj_planet.star.R.rescale(aq.m)), 5))
-                else:
-                    rp_over_rs.set(0.0)
-                if not np.isnan(obj_planet.calcSMA()) and not np.isnan(obj_planet.star.R):
-                    sma_over_rs.set(round(float(obj_planet.calcSMA().rescale(aq.m) /
-                                                obj_planet.star.R.rescale(aq.m)), 5))
-                else:
-                    sma_over_rs.set(0.0)
-                if not np.isnan(obj_planet.i):
-                    inclination.set(float(obj_planet.i))
-                else:
-                    inclination.set(0.0)
-                if not np.isnan(obj_planet.e):
-                    eccentricity.set(float(obj_planet.e))
-                else:
-                    eccentricity.set(0.0)
-                if not np.isnan(obj_planet.periastron):
-                    periastron.set(float(obj_planet.periastron))
-                else:
-                    periastron.set(0.0)
+                parameters = plc.find_oec_parameters(planet.get(), catalogue=catalogue)
+                logg.set(parameters[1])
+                temperature.set(parameters[2])
+                metallicity.set(parameters[3])
+                rp_over_rs.set(parameters[4])
+                period.set(parameters[6])
+                sma_over_rs.set(parameters[7])
+                eccentricity.set(parameters[8])
+                inclination.set(parameters[9])
+                periastron.set(parameters[10])
+                mid_time.set(parameters[11])
 
             enable_buttons = True
 
@@ -1108,7 +1203,104 @@ def fitting_window():
 
         planet_entry.selection_clear()
 
-    update_window('a')
+        try:
+
+            if update_preview.get():
+
+                light_curve = np.loadtxt(light_curve_file.get(), unpack=True)
+
+                if binning.get() > 1:
+                    start = np.mod(len(light_curve[0]), binning.get())
+                    light_curve_0 = np.mean(np.reshape(light_curve[0][start:],
+                                                       (light_curve[0].size / binning.get(), binning.get())), 1)
+                    light_curve_1 = np.mean(np.reshape(light_curve[1][start:],
+                                                       (light_curve[1].size / binning.get(), binning.get())), 1)
+                else:
+                    light_curve_0 = light_curve[0]
+                    light_curve_1 = light_curve[1]
+
+                light_curve_0 = light_curve_0[np.where(~np.isnan(light_curve_1))]
+                light_curve_1 = light_curve_1[np.where(~np.isnan(light_curve_1))]
+
+                moving_average = np.zeros_like(light_curve_0)
+                for i in range(-5, 6):
+                    moving_average += np.roll(light_curve_1, i)
+                for i in range(6):
+                    moving_average[i] = np.sum(light_curve_1[0:11])
+                    moving_average[-1 - i] = np.sum(light_curve_1[-11:])
+                moving_average /= 11.0
+
+                test = np.median(np.abs(light_curve_1 - moving_average))
+
+                flag = np.where((np.abs(light_curve_1 - moving_average) < scatter.get() * test))
+
+                limb_darkening_coefficients = plc.clablimb(
+                    'claret', logg.get(), temperature.get(), metallicity.get(), phot_filter.get())
+
+                data_delta_t = light_curve_0[flag] - light_curve_0[flag][0]
+
+                def mcmc_f(inputs, detrend_zero, detrend_one, detrend_two, model_rp_over_rs, model_mid_time):
+
+                    if inputs:
+                        detrend = detrend_zero * (1 + detrend_one * data_delta_t +
+                                                  detrend_two * data_delta_t * data_delta_t)
+                        transit_model = plc.transit('claret', limb_darkening_coefficients, model_rp_over_rs,
+                                                    period.get(), sma_over_rs.get(), eccentricity.get(),
+                                                    inclination.get(), periastron.get(),
+                                                    mid_time.get() + model_mid_time,
+                                                    time_array=light_curve_0[flag])
+
+                        return detrend * transit_model
+
+                def independent_f(detrend_zero, detrend_one, detrend_two, model_rp_over_rs, model_mid_time):
+
+                    detrend = detrend_zero * (1 + detrend_one * data_delta_t +
+                                              detrend_two * data_delta_t * data_delta_t)
+                    transit_model = plc.transit('claret', limb_darkening_coefficients, model_rp_over_rs, period.get(),
+                                                sma_over_rs.get(), eccentricity.get(), inclination.get(),
+                                                periastron.get(), mid_time.get() + model_mid_time,
+                                                time_array=light_curve_0[flag])
+
+                    return detrend, transit_model
+
+                popt, pcov = curve_fit(mcmc_f, True, light_curve_1[flag],
+                                       p0=[np.mean(light_curve_1[flag]), 1, 1, rp_over_rs.get(), 0])
+
+                fit_detrend, fit_transit_model = independent_f(*popt)
+
+                predicted_transit_model = plc.transit('claret', limb_darkening_coefficients, rp_over_rs.get(),
+                                                      period.get(), sma_over_rs.get(), eccentricity.get(),
+                                                      inclination.get(), periastron.get(), mid_time.get(),
+                                                      time_array=light_curve_0[flag])
+
+                new_mid_time = (mid_time.get()
+                                + round((np.mean(light_curve_0) - mid_time.get()) / period.get()) * period.get()
+                                + popt[-1])
+
+                phase = np.array((light_curve_0 - new_mid_time) / period.get())
+
+                ax1.cla()
+                ax2.cla()
+
+                ax1.plot(phase, light_curve_1, 'ro', ms=3, mec='r')
+                ax1.plot(phase[flag], light_curve_1[flag], 'ko', ms=3)
+                ax1.plot(phase[flag], fit_detrend * fit_transit_model, 'r-')
+                ax1.set_yticks(ax1.get_yticks()[1:])
+                ax1.tick_params(labelbottom='off')
+                ax1.set_ylabel(r'$\mathrm{relative} \ \mathrm{flux}$', fontsize=20)
+
+                ax2.plot(phase[flag], light_curve_1[flag] / fit_detrend, 'ko', ms=3)
+                ax2.plot(phase[flag], fit_transit_model, 'r-')
+                ax2.plot(phase[flag], predicted_transit_model, 'c-')
+                ax2.set_ylabel(r'$\mathrm{normalised} \ \mathrm{flux}$', fontsize=20)
+                ax2.set_xlabel(r'$\mathrm{phase}$', fontsize=20)
+
+                canvas.draw()
+
+        except:
+            pass
+
+    update_window(None)
 
     # define actions for the different buttons, including calls to the function that updates the window
 
@@ -1120,7 +1312,7 @@ def fitting_window():
             light_curve_file.set(new_light_curve_file)
             light_curve_dir_short.set(os.path.split(os.path.split(light_curve_file.get())[0])[1])
             light_curve_file_short.set(os.path.split(light_curve_file.get())[1])
-            update_window('a')
+            update_window(None)
 
     def choose_planet(entry):
 
@@ -1128,8 +1320,25 @@ def fitting_window():
             return 0
 
         update_planet.set(True)
-        update_window('a')
+        update_window(None)
         update_planet.set(False)
+
+    def show_preview():
+
+        if not finalised_root5.get():
+            finalised_root5.set(True)
+            open_root5.set(True)
+            update_preview.set(True)
+            update_window(None)
+            update_preview.set(False)
+            finalise_window(root5, position=1)
+
+        else:
+            open_root5.set(True)
+            update_preview.set(True)
+            update_window(None)
+            update_preview.set(False)
+            root5.deiconify()
 
     def return_to_photometry():
 
@@ -1153,13 +1362,12 @@ def fitting_window():
         write_log('fitting', eccentricity.get(), 'eccentricity')
         write_log('fitting', periastron.get(), 'periastron')
 
-        go_back.set(True)
         root.destroy()
 
     def fitting():
 
         running.set(True)
-        update_window('a')
+        update_window(None)
 
         write_log('fitting', light_curve_file.get(), 'light_curve_file')
         write_log('fitting', light_curve_file_short.get(), 'light_curve_file_short')
@@ -1184,10 +1392,13 @@ def fitting_window():
         ftr.fitting()
 
         running.set(False)
-        update_window('a')
+        update_window(None)
 
     def exit_hops():
         root.destroy()
+        os._exit(-1)
+
+    # connect widgets to functions
 
     light_curve_file_entry['command'] = choose_light_curve_file
     planet_entry.bind('<<ComboboxSelected>>', choose_planet)
@@ -1207,6 +1418,7 @@ def fitting_window():
     inclination_entry.bind(sequence='<KeyRelease>', func=update_window)
     eccentricity_entry.bind(sequence='<KeyRelease>', func=update_window)
     periastron_entry.bind(sequence='<KeyRelease>', func=update_window)
+    show_preview_button['command'] = show_preview
     return_to_photometry_button['command'] = return_to_photometry
     fitting_button['command'] = fitting
     exit_hops_button['command'] = exit_hops
@@ -1239,6 +1451,8 @@ def fitting_window():
         [[eccentricity_label, 3], [eccentricity_entry, 4]],
         [[periastron_label, 3], [periastron_entry, 4]],
         [],
+        [[show_preview_button, 4]],
+        [],
         [[fitting_button, 1, 4]],
         [],
         [[return_to_photometry_button, 1, 4]],
@@ -1249,15 +1463,11 @@ def fitting_window():
 
     # finalise and show  window
 
-    finalise_window(root)
+    finalise_window(root, position=5)
     root.mainloop()
-
-    return go_back.get()
 
 
 if __name__ == '__main__':
     reduction_alignment_window()
-    run = 1
-    while run == 1:
-        photometry_window()
-        run = fitting_window()
+    photometry_window()
+    fitting_window()

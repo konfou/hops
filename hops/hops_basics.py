@@ -26,13 +26,17 @@ import matplotlib.patches as mpatches
 from matplotlib.offsetbox import AnchoredText
 import ttk
 import sys
+import matplotlib.patches as mpatch
+
+import pylightcurve as plc
 
 
-__location__ = os.path.dirname(__file__)
+__location__ = os.path.abspath(os.path.dirname(__file__))
 
 holomon_logo = glob.glob(__location__ + '/holomon.gif')[0]
 main_logfile = __location__ + '/log.yaml'
 logfile = 'log.yaml'
+
 
 def read_main_log(keyword, keyword2=None):
     x = yaml.load(open(main_logfile, 'r'))
@@ -99,7 +103,7 @@ def test_fits_keyword(fits_file, keyword):
             fits_file = glob.glob('*' + fits_file + '*.f*t*')[0]
 
             if pf.open(fits_file)[0].header[str(keyword)]:
-                return [True, 'Keyword found']
+                return [True, 'Keyword found', pf.open(fits_file)[0].header[str(keyword)]]
 
             else:
                 return [False, 'No keyword found']
@@ -194,83 +198,85 @@ def test_coordinates(radec_string):
         return [False, 'Wrong\ncoordinates']
 
 
-def initialise_window(window, window_name=None, exit_command=None):
-
-    if not window_name:
-        window_name = read_main_log('windows', 'software_window')
-
-    if not exit_command:
-        def exit_command():
-            os._exit(-1)
-
-    window.wm_title(window_name)
-    window.protocol('WM_DELETE_WINDOW', exit_command)
-
-    window.withdraw()
-
-
-def setup_window(window, objects):
-
-    main_font = tuple(read_main_log('windows', 'main_font'))
-    title_font = tuple(read_main_log('windows', 'title_font'))
-    button_font = tuple(read_main_log('windows', 'button_font'))
-    entries_bd = read_main_log('windows', 'entries_bd')
-
-    for row in range(len(objects)):
-        if len(objects[row]) == 0:
-            label_empty = Label(window, text='')
-            label_empty.grid(row=row, column=100)
-        else:
-            for obj in objects[row]:
-
-                if obj[0].winfo_class() == 'Button':
-                    obj[0].configure(font=button_font)
-                elif obj[0].winfo_class() == 'Entry':
-                    obj[0].configure(bd=entries_bd, font=main_font)
-                elif obj[0].winfo_class() in ['Label', 'Radiobutton']:
-                    if len(obj) == 5:
-                        if obj[4] == 'title':
-                            obj[0].configure(font=title_font)
-                        else:
-                            obj[0].configure(font=main_font)
-                    else:
-                        obj[0].configure(font=main_font)
-
-                if len(obj) >= 4:
-                    obj[0].grid(row=row, column=obj[1], columnspan=obj[2], rowspan=obj[3])
-                elif len(obj) == 3:
-                    obj[0].grid(row=row, column=obj[1], columnspan=obj[2])
-                else:
-                    obj[0].grid(row=row, column=obj[1])
-
-
-def finalise_window(window, center=True, topmost=False):
-
-    window.update_idletasks()
-
-    if center:
-        x = (window.winfo_screenwidth() - window.winfo_reqwidth()) / 2
-        y = (window.winfo_screenheight() - window.winfo_reqheight()) / 2
-        window.geometry('+%d+%d' % (x, y))
-
-    else:
-        window.geometry('+%d+%d' % (0, 0))
-
-    window.update_idletasks()
-
-    window.lift()
-    window.wm_attributes("-topmost", 1)
-    if not topmost:
-        window.after_idle(window.attributes, '-topmost', 0)
-
-    window.deiconify()
+# def initialise_window(window, window_name=None, exit_command=None):
+#
+#     if not window_name:
+#         window_name = read_main_log('windows', 'software_window')
+#
+#     if not exit_command:
+#         def exit_command():
+#             os._exit(-1)
+#
+#     window.wm_title(window_name)
+#     window.protocol('WM_DELETE_WINDOW', exit_command)
+#
+#     window.withdraw()
+#
+#
+# def setup_window(window, objects):
+#
+#     main_font = tuple(read_main_log('windows', 'main_font'))
+#     title_font = tuple(read_main_log('windows', 'title_font'))
+#     button_font = tuple(read_main_log('windows', 'button_font'))
+#     entries_bd = read_main_log('windows', 'entries_bd')
+#
+#     for row in range(len(objects)):
+#         if len(objects[row]) == 0:
+#             label_empty = Label(window, text='')
+#             label_empty.grid(row=row, column=100)
+#         else:
+#             for obj in objects[row]:
+#
+#                 if obj[0].winfo_class() == 'Button':
+#                     obj[0].configure(font=button_font)
+#                 elif obj[0].winfo_class() == 'Entry':
+#                     obj[0].configure(bd=entries_bd, font=main_font)
+#                 elif obj[0].winfo_class() in ['Label', 'Radiobutton']:
+#                     if len(obj) == 5:
+#                         if obj[4] == 'title':
+#                             obj[0].configure(font=title_font)
+#                         else:
+#                             obj[0].configure(font=main_font)
+#                     else:
+#                         obj[0].configure(font=main_font)
+#
+#                 if len(obj) >= 4:
+#                     obj[0].grid(row=row, column=obj[1], columnspan=obj[2], rowspan=obj[3])
+#                 elif len(obj) == 3:
+#                     obj[0].grid(row=row, column=obj[1], columnspan=obj[2])
+#                 else:
+#                     obj[0].grid(row=row, column=obj[1])
+#
+#
+# def finalise_window(window, center=True, topmost=False):
+#
+#     window.update_idletasks()
+#
+#     if center:
+#         x = (window.winfo_screenwidth() - window.winfo_reqwidth()) / 2
+#         y = (window.winfo_screenheight() - window.winfo_reqheight()) / 2
+#         window.geometry('+%d+%d' % (x, y))
+#
+#     else:
+#         window.geometry('+%d+%d' % (0, 0))
+#
+#     window.update_idletasks()
+#
+#     window.lift()
+#     window.wm_attributes("-topmost", 1)
+#     # if not topmost:
+#     window.after_idle(window.attributes, '-topmost', 0)
+#
+#     window.deiconify()
 
 
 def test_float_input(input_str, typing):
 
     if typing == '1':
         try:
-            if float(input_str):
+            if float(input_str) >= 0:
+                return True            
+            elif float(input_str) < 0:
                 return True
             else:
                 return False

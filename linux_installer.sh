@@ -2,4 +2,4 @@
 
 mydir=$(pwd)
 
-python "$mydir/setup.py"
+python "$mydir/setup.py" install

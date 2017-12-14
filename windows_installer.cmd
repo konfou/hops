@@ -1,3 +1,3 @@
 SET mydir=%cd%
 
-python "%mydir%\setup.py"
+python "%mydir%\setup.py" install

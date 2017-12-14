@@ -1,71 +1,67 @@
+from setuptools import setup
+import codecs
 import os
-import shutil
-import platform
+import glob
 
-app = 'hops'
-system = platform.system()
+name = 'hops'
+description = 'HOlomon Photometry Software'
+url = 'https://github.com/atsiaras/hops'
+install_requires = ['pylightcurve', 'scipy', 'pyaml', 'ephem', 'pyfits']
 
-excecutable = {'Darwin': 'command', 'Linux': 'sh', 'Windows': 'cmd'}
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-current_app_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), app)
-app_dir = os.path.join(os.path.expanduser('~'), app)
+subdirs_to_include = []
+for x in os.walk(name):
+    if os.path.isdir(x[0]):
+        if x[0] != name:
+            subdirs_to_include.append(x[0])
 
-shortcut = os.path.join(os.path.expanduser('~'), 'Desktop', app + '.' + excecutable[system])
+files_to_include = []
+for x in glob.glob(os.path.join(name, '*')):
+    if x[-2:] != 'py':
+        files_to_include.append(os.path.join(name, os.path.split(x)[1]))
 
-# install to home
+files_to_include.append('readme.md')
+files_to_include.append('LICENSE')
 
-if os.path.isdir(app_dir):
-    shutil.rmtree(app_dir)
-    shutil.copytree(current_app_dir, app_dir)
-else:
-    shutil.copytree(current_app_dir, app_dir)
+w = open('MANIFEST.in', 'w')
+for i in subdirs_to_include:
+    w.write('include ' + os.path.join(i, '*') + ' \n')
 
-# create shortcut
+for i in files_to_include:
+    w.write('include ' + i + ' \n')
 
-w = open(shortcut, 'w')
-w.write('python ' + app_dir)
 w.close()
 
-if system == 'Darwin':
-    os.system('chmod 755 ' + shortcut)
-elif system == 'Linux':
-    os.system('chmod +x' + shortcut)
+with codecs.open('readme.md', encoding='utf-8') as f:
+    long_description = f.read()
 
-try:
-    import yaml
-    print '\nPackage yaml already installed.'
-except ImportError:
-    os.system("pip install pyyaml")
-try:
-    import numpy
-    print '\nPackage numpy already installed.'
-except ImportError:
-    os.system("pip install numpy")
-try:
-    import scipy
-    print '\nPackage scipy already installed.'
-except ImportError:
-    os.system("pip install scipy")
-try:
-    import matplotlib
-    print '\nPackage matplotlib already installed.'
-except ImportError:
-    os.system("pip install matplotlib")
-try:
-    import quantities
-    print '\nPackage quantities already installed.'
-except ImportError:
-    os.system("pip install quantities")
-try:
-    import pyfits
-    print '\nPackage pyfits already installed.'
-except ImportError:
-    os.system("pip install pyfits")
-try:
-    import ephem
-    print '\nPackage ephem already installed.'
-except ImportError:
-    os.system("pip install ephem")
+version = ' '
+for i in open(os.path.join(name, '__init__.py')):
+    if len(i.split('__version__')) > 1:
+        version = i.split()[-1][1:-1]
 
-print '\n'
-raw_input('Installation completed. Press enter to exit.')
+setup(
+    name=name,
+    version=version,
+    description=description,
+    long_description=long_description,
+    url=url,
+    author='Angelos Tsiaras',
+    author_email='aggelostsiaras@gmail.com',
+    license='MIT',
+    classifiers=['Development Status :: 4 - Beta',
+                 'Environment :: Console',
+                 'Intended Audience :: Science/Research',
+                 'Topic :: Scientific/Engineering :: Astronomy',
+                 'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                 'Operating System :: MacOS :: MacOS X'
+                 'Programming Language :: Python :: 2.7',
+                 ],
+    packages=[name],
+    install_requires=install_requires,
+    include_package_data=True,
+    zip_safe=False,
+)
+
+os.system("python ./setup2.py")

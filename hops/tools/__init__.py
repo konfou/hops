@@ -2,8 +2,6 @@ import numpy as np
 
 from scipy.optimize import curve_fit
 
-import matplotlib as plt
-
 import ephem
 
 import pyfits as pf
@@ -123,6 +121,67 @@ def fits_like(fits):
     return pf.HDUList(copy_fits)
 
 
+def fit_2d_gauss_point(data_array, predicted_x_mean, predicted_y_mean, search_window):
+
+    def function_2d_gauss((x_array, y_array), model_norm, model_floor,
+                          model_x_mean, model_y_mean, model_x_std, model_y_std, model_theta):
+
+        a = (np.cos(model_theta) ** 2) / (2 * model_x_std ** 2) + (np.sin(model_theta) ** 2) / (2 * model_y_std ** 2)
+        b = -(np.sin(2 * model_theta)) / (4 * model_x_std ** 2) + (np.sin(2 * model_theta)) / (4 * model_y_std ** 2)
+        c = (np.sin(model_theta) ** 2) / (2 * model_x_std ** 2) + (np.cos(model_theta) ** 2) / (2 * model_y_std ** 2)
+
+        return (model_floor + model_norm * np.exp(- (a * ((x_array - model_x_mean) ** 2)
+                                                  + 2.0 * b * (x_array - model_x_mean) * (y_array - model_y_mean)
+                                                  + c * ((y_array - model_y_mean) ** 2)))).flatten()
+
+    y_min = int(max(predicted_y_mean - search_window, 0))
+    y_max = int(min(predicted_y_mean + search_window, len(data_array)))
+    x_min = int(max(predicted_x_mean - search_window, 0))
+    x_max = int(min(predicted_x_mean + search_window, len(data_array[0])))
+
+    cropped_data_array = data_array[y_min:y_max, x_min:x_max]
+    cropped_x_data_array = np.arange(x_min, x_max)
+    cropped_y_data_array = np.arange(y_min, y_max)
+
+    norm = data_array[int(predicted_y_mean)][int(predicted_x_mean)] - np.min(cropped_data_array)
+    floor = np.min(cropped_data_array)
+    x_mean = cropped_x_data_array[np.where(cropped_data_array == np.max(cropped_data_array))[1][0]]
+    y_mean = cropped_y_data_array[np.where(cropped_data_array == np.max(cropped_data_array))[0][0]]
+    x_std = max(1.0, np.abs(cropped_x_data_array[np.argmin(
+        np.abs(np.sum(cropped_data_array, 0) - np.max(np.sum(cropped_data_array, 0)) / 2))] - x_mean))
+    y_std = x_std
+    theta = 0.0
+
+    try:
+        [norm, floor, x_mean, y_mean, x_std, y_std, theta], covariance = \
+            curve_fit(function_2d_gauss,
+                      np.meshgrid(cropped_x_data_array, cropped_y_data_array),
+                      cropped_data_array.flatten(),
+                      p0=[norm, floor, x_mean, y_mean, x_std, y_std, theta])
+
+        x_mean += 0.5
+        y_mean += 0.5
+        x_std = abs(x_std)
+        y_std = abs(y_std)
+
+        if norm > 3 * np.sqrt(covariance[0][0]):
+            found = True
+
+        else:
+            found = False
+
+    except RuntimeError:
+
+        found = False
+
+    if found:
+        return norm, floor, x_mean, y_mean, x_std, y_std
+
+    else:
+        print 'fit_2d_gauss: could not find a 2D Gaussian'
+        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+
+
 def fit_2d_gauss(data_array, predicted_x_mean=None, predicted_y_mean=None, search_window=None):
 
     found = False
@@ -206,9 +265,16 @@ def find_centroids(data_array, x_low=0, x_upper=None, y_low=0, y_upper=None,
 
     if not x_upper:
         x_upper = data_array.shape[1]
+    else:
+        x_upper = min(x_upper, len(data_array[0]))
 
     if not y_upper:
         y_upper = data_array.shape[0]
+    else:
+        y_upper = min(y_upper, len(data_array))
+
+    x_low = max(0, x_low)
+    y_low = max(0, y_low)
 
     if not x_centre:
         x_centre = data_array.shape[1] / 2
@@ -243,7 +309,7 @@ def find_centroids(data_array, x_low=0, x_upper=None, y_low=0, y_upper=None,
         for j in range(-star_std, star_std + 1):
             test.append(np.roll(np.roll(data_array, i, 0), j, 1))
 
-    stars = np.where((data_array < burn_limit) & (np.max(test, 0) == data_array) & (np.min(test, 0) > noise_limit))
+    stars = np.where((data_array < burn_limit) & (np.max(test, 0) == data_array) & (np.median(test, 0) > noise_limit))
     stars = [np.sqrt((stars[1] + x_low - x_centre) ** 2 + (stars[0] + y_low - y_centre) ** 2),
              stars[1] + x_low, stars[0] + y_low, np.sum(test, 0)[stars]]
     stars = np.swapaxes(stars, 0, 1)

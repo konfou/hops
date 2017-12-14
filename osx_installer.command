@@ -2,4 +2,4 @@
 
 mydir="$(dirname "$BASH_SOURCE")"
 
-python "$mydir/setup.py"
+python "$mydir/setup.py" install
