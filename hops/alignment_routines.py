@@ -449,8 +449,8 @@ def alignment():
         if stars_detected:
 
             norm, floor, x_mean, y_mean, x_sigma, y_sigma = \
-                tools.fit_2d_gauss_point(fits[1].data, predicted_x_mean=x0, predicted_y_mean=y0,
-                                         search_window=2 * star_std)
+                tools.fit_2d_gauss(fits[1].data, predicted_x_mean=x0, predicted_y_mean=y0,
+                                   search_window=2 * star_std)
 
             x0, y0 = x_mean, y_mean
 

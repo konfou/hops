@@ -9,21 +9,4 @@ and a command file will be created in your Desktop. You will be able to run the
 photometry software by double-click on the command file.
 
 
-Python 2.7 required as well as the packages below:
-
-
-matplotlib *
-
-numpy *
-
-scipy *
-
-yaml *
-
-ephem
-
-pyfits
-
-quantities
-
-(*) Already installed if you install python via anaconda.
+Python 2.7 is required.
