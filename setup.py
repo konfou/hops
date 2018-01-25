@@ -10,6 +10,11 @@ install_requires = ['pylightcurve', 'scipy', 'pyaml', 'ephem', 'pyfits']
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
+os.chdir('stsci.distutils-0.3.7')
+os.system('python setup.py install')
+os.chdir('..')
+os.system('pip install pyaml')
+
 subdirs_to_include = []
 for x in os.walk(name):
     if os.path.isdir(x[0]):
