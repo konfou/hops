@@ -15,6 +15,7 @@ os.system('python setup.py install')
 os.chdir('..')
 os.system('pip install pyaml')
 os.system('pip install ephem')
+os.system('pip install pylightcurve')
 
 subdirs_to_include = []
 for x in os.walk(name):
