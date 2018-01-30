@@ -1,17 +1,11 @@
 import platform
 import os
-import shutil
 
 name = 'hops'
 
-
-os.chdir(os.path.abspath(os.path.dirname(__file__)))
-
-shutil.move(name, name + '2')
+os.chdir(os.path.expanduser('~'))
 
 from hops import __get_abspath__
-
-shutil.move(name + '2', name)
 
 app_dir = __get_abspath__()
 system = platform.system()

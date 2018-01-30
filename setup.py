@@ -10,7 +10,7 @@ install_requires = ['pylightcurve', 'scipy', 'pyaml', 'ephem', 'pyfits']
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-os.chdir('stsci.distutils-0.3.7')
+os.chdir('pyfits-3.5')
 os.system('python setup.py install')
 os.chdir('..')
 os.system('pip install ephem')
