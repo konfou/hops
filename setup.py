@@ -5,7 +5,7 @@ import glob
 
 name = 'hops'
 description = 'HOlomon Photometry Software'
-url = 'https://github.com/atsiaras/hops'
+url = 'https://https://github.com/HolomonAstronomicalStation/hops'
 install_requires = ['pylightcurve', 'scipy', 'pyaml', 'ephem', 'pyfits']
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
@@ -13,9 +13,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 os.chdir('stsci.distutils-0.3.7')
 os.system('python setup.py install')
 os.chdir('..')
-os.system('pip install pyaml')
 os.system('pip install ephem')
-os.system('pip install pylightcurve')
 
 subdirs_to_include = []
 for x in os.walk(name):
@@ -28,7 +26,7 @@ for x in glob.glob(os.path.join(name, '*')):
     if x[-2:] != 'py':
         files_to_include.append(os.path.join(name, os.path.split(x)[1]))
 
-files_to_include.append('readme.md')
+files_to_include.append('README.md')
 files_to_include.append('LICENSE')
 
 w = open('MANIFEST.in', 'w')
@@ -40,7 +38,7 @@ for i in files_to_include:
 
 w.close()
 
-with codecs.open('readme.md', encoding='utf-8') as f:
+with codecs.open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
 version = ' '

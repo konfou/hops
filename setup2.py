@@ -22,12 +22,12 @@ excecutable = {'Darwin': 'command', 'Linux': 'sh', 'Windows': 'cmd'}
 try:
     shortcut = os.path.join(os.path.expanduser('~'), 'Desktop', name + '.' + excecutable[system])
     w = open(shortcut, 'w')
-    w.write('python ' + app_dir)
+    w.write('python \"' + app_dir + '\"')
     w.close()
 except IOError:
     shortcut = os.path.join(os.path.expanduser('~'), name + '.' + excecutable[system])
     w = open(shortcut, 'w')
-    w.write('python ' + app_dir)
+    w.write('python \"' + app_dir + '\"')
     w.close()
 
 if system == 'Darwin':
