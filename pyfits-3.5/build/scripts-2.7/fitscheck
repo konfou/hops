@@ -1,8 +1,0 @@
-#!/Users/angelos/anaconda2/bin/python
-
-import pyfits.scripts.fitscheck
-import sys
-
-
-if __name__ == '__main__':
-    sys.exit(pyfits.scripts.fitscheck.main())

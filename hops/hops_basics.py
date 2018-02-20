@@ -3,13 +3,11 @@ warnings.filterwarnings("ignore",
                         message='Matplotlib is building the font cache using fc-list. This may take a moment.')
 warnings.filterwarnings("ignore",
                         message='The installed version of numexpr 2.4.4 is not supported in pandas and will be not be used')
-warnings.filterwarnings("ignore",
-                        message='PyFITS is deprecated, please use astropy.io.fits')
 
 from Tkinter import *
 import tkFileDialog
 from tkMessageBox import *
-import pyfits as pf
+from astropy.io import fits as pf
 import os
 import glob
 import shutil

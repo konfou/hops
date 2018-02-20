@@ -4,7 +4,7 @@ from scipy.optimize import curve_fit
 
 import ephem
 
-import pyfits as pf
+from astropy.io import fits as pf
 
 
 def cartesian_to_polar(x_position, y_position, x_ref_position, y_ref_position):

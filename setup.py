@@ -6,14 +6,9 @@ import glob
 name = 'hops'
 description = 'HOlomon Photometry Software'
 url = 'https://https://github.com/HolomonAstronomicalStation/hops'
-install_requires = ['pylightcurve', 'scipy', 'pyaml', 'ephem', 'pyfits']
+install_requires = ['pylightcurve', 'scipy', 'pyaml', 'ephem', 'astropy']
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
-
-os.chdir('pyfits-3.5')
-os.system('python setup.py install')
-os.chdir('..')
-os.system('pip install ephem')
 
 subdirs_to_include = []
 for x in os.walk(name):

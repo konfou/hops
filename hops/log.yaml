@@ -46,8 +46,8 @@ photometry:
   use_auto_target_ra_dec: true
 pipeline:
   alignment_complete: false
-  directory: /Users/angelos/Desktop/Rc
-  directory_short: Desktop/Rc
+  directory: /Users/angelos/Desktop/hops_test_data
+  directory_short: Desktop/hops_test_data
   fitting_directory: FITTING
   fov_figure: FOV.pdf
   light_curve_aperture_file: PHOTOMETRY_APERTURE.txt
