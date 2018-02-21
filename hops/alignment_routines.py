@@ -51,7 +51,7 @@ def setup_window(window, objects):
                     obj[0].grid(row=row, column=obj[1])
 
 
-def finalise_window(window, center=True, topmost=False):
+def finalise_window(window, center=True):
 
     window.update_idletasks()
 
@@ -67,7 +67,6 @@ def finalise_window(window, center=True, topmost=False):
 
     window.lift()
     window.wm_attributes("-topmost", 1)
-    # if not topmost:
     window.after_idle(window.attributes, '-topmost', 0)
 
     window.deiconify()
@@ -133,12 +132,15 @@ def alignment():
         std_limit -= 1.0
     calibration_stars = [[-pp[3], pp[1], pp[2], pp[0]] for pp in centroids]
 
-    norm, floor, x_mean, y_mean, x_sigma, y_sigma = tools.fit_2d_gauss_point(fits[1].data,
-                                                                             predicted_x_mean=calibration_stars[0][1],
-                                                                             predicted_y_mean=calibration_stars[0][2],
-                                                                             search_window=2 * star_std)
-    x_ref_position, y_ref_position = x_mean, y_mean
-    del calibration_stars[0]
+    x_ref_position = np.nan
+    y_ref_position = np.nan
+    while np.isnan(x_ref_position * y_ref_position):
+        norm, floor, x_mean, y_mean, x_sigma, y_sigma = tools.fit_2d_gauss_point(
+            fits[1].data,
+            predicted_x_mean=calibration_stars[0][1], predicted_y_mean=calibration_stars[0][2],
+            search_window=2 * star_std)
+        x_ref_position, y_ref_position = x_mean, y_mean
+        del calibration_stars[0]
 
     centroids = tools.find_centroids(fits[1].data, mean=fits[1].header[mean_key], std=fits[1].header[std_key],
                                      std_limit=3.0, burn_limit=7.0 * burn_limit / 8, star_std=star_std)
@@ -157,7 +159,6 @@ def alignment():
         r_position, u_position = tools.cartesian_to_polar(x_position, y_position, x_ref_position, y_ref_position)
         if not np.isnan(x_position * y_position):
             calibration_stars_polar.append([r_position, u_position])
-            print x_mean, y_mean
 
     x0, y0, u0, comparisons = x_ref_position, y_ref_position, 0, calibration_stars_polar
     fits.close()
@@ -247,6 +248,8 @@ def alignment():
                         check_lim = (fits[1].header[mean_key] + fits[1].header[std_key]) * ((2 * star_std + 1) ** 2)
                         if check_sum > check_lim:
                             test += 1
+                        else:
+                            test -= 1
 
                     if test > 0.1 * len(comparisons):
                         break

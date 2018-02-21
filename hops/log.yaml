@@ -46,8 +46,8 @@ photometry:
   use_auto_target_ra_dec: true
 pipeline:
   alignment_complete: false
-  directory: /Users/angelos/Desktop/hops_test_data
-  directory_short: Desktop/hops_test_data
+  directory: /Users/angelos/Desktop/qatar1b/2014.02.16.qatar1b.atlas.c11.atik11000.filter_lum.L
+  directory_short: qatar1b/2014.02.16.qatar1b.atlas.c11.atik11000.filter_lum.L
   fitting_directory: FITTING
   fov_figure: FOV.pdf
   light_curve_aperture_file: PHOTOMETRY_APERTURE.txt
