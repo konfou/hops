@@ -51,7 +51,7 @@ def setup_window(window, objects):
                     obj[0].grid(row=row, column=obj[1])
 
 
-def finalise_window(window, center=True):
+def finalise_window(window, center=True, topmost=False):
 
     window.update_idletasks()
 
