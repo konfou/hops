@@ -1,4 +1,7 @@
-from hops_basics import *
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from .hops_basics import *
 
 
 def initialise_window(window, window_name=None, exit_command=None):
@@ -107,18 +110,18 @@ def alignment():
     centroids = []
     std_limit = 5.0
     while len(centroids) == 0 and std_limit >= 1.0:
-        centroids = tools.find_centroids(fits[1].data, mean=fits[1].header[mean_key], std=fits[1].header[std_key],
-                                         std_limit=std_limit, burn_limit=7.0 * burn_limit / 8, star_std=2)
+        centroids = find_centroids(fits[1].data, mean=fits[1].header[mean_key], std=fits[1].header[std_key],
+                                   std_limit=std_limit, burn_limit=7.0 * burn_limit / 8, star_std=2)
         std_limit -= 1.0
     calibration_stars = [[-pp[3], pp[1], pp[2], pp[0]] for pp in centroids]
 
     new_star_std = []
     for calibration_centroid in calibration_stars[:int(0.1 * len(calibration_stars))]:
         norm, floor, x_mean, y_mean, x_sigma, y_sigma = \
-            tools.fit_2d_gauss_point(fits[1].data,
-                                     predicted_x_mean=calibration_centroid[1],
-                                     predicted_y_mean=calibration_centroid[2],
-                                     search_window=2 * star_std)
+            fit_2d_gauss_point(fits[1].data,
+                               predicted_x_mean=calibration_centroid[1],
+                               predicted_y_mean=calibration_centroid[2],
+                               search_window=2 * star_std)
         if not np.isnan(x_mean * y_mean):
             new_star_std.append(x_sigma)
     star_std = max(1, int(np.median(new_star_std)) - 1)
@@ -127,23 +130,23 @@ def alignment():
     centroids = []
     std_limit = 5.0
     while len(centroids) == 0 and std_limit >= 1.0:
-        centroids = tools.find_centroids(fits[1].data, mean=fits[1].header[mean_key], std=fits[1].header[std_key],
-                                         std_limit=std_limit, burn_limit=7.0 * burn_limit / 8, star_std=2 * star_std)
+        centroids = find_centroids(fits[1].data, mean=fits[1].header[mean_key], std=fits[1].header[std_key],
+                                   std_limit=std_limit, burn_limit=7.0 * burn_limit / 8, star_std=2 * star_std)
         std_limit -= 1.0
     calibration_stars = [[-pp[3], pp[1], pp[2], pp[0]] for pp in centroids]
 
     x_ref_position = np.nan
     y_ref_position = np.nan
     while np.isnan(x_ref_position * y_ref_position):
-        norm, floor, x_mean, y_mean, x_sigma, y_sigma = tools.fit_2d_gauss_point(
+        norm, floor, x_mean, y_mean, x_sigma, y_sigma = fit_2d_gauss_point(
             fits[1].data,
             predicted_x_mean=calibration_stars[0][1], predicted_y_mean=calibration_stars[0][2],
             search_window=2 * star_std)
         x_ref_position, y_ref_position = x_mean, y_mean
         del calibration_stars[0]
 
-    centroids = tools.find_centroids(fits[1].data, mean=fits[1].header[mean_key], std=fits[1].header[std_key],
-                                     std_limit=3.0, burn_limit=7.0 * burn_limit / 8, star_std=star_std)
+    centroids = find_centroids(fits[1].data, mean=fits[1].header[mean_key], std=fits[1].header[std_key],
+                               std_limit=3.0, burn_limit=7.0 * burn_limit / 8, star_std=star_std)
     calibration_stars = [[-pp[3], pp[1], pp[2], pp[0]] for pp in centroids]
     calibration_stars.sort()
 
@@ -151,12 +154,12 @@ def alignment():
     calibration_stars_polar = []
     for calibration_star in calibration_stars[:100]:
         norm, floor, x_mean, y_mean, x_sigma, y_sigma = \
-            tools.fit_2d_gauss_point(fits[1].data,
-                                     predicted_x_mean=calibration_star[1],
-                                     predicted_y_mean=calibration_star[2],
-                                     search_window=2 * star_std)
+            fit_2d_gauss_point(fits[1].data,
+                               predicted_x_mean=calibration_star[1],
+                               predicted_y_mean=calibration_star[2],
+                               search_window=2 * star_std)
         x_position, y_position = x_mean, y_mean
-        r_position, u_position = tools.cartesian_to_polar(x_position, y_position, x_ref_position, y_ref_position)
+        r_position, u_position = cartesian_to_polar(x_position, y_position, x_ref_position, y_ref_position)
         if not np.isnan(x_position * y_position):
             calibration_stars_polar.append([r_position, u_position])
 
@@ -220,12 +223,12 @@ def alignment():
         fits = pf.open(science_file, mode='update')
 
         # fast detection test
-        centroids = tools.find_centroids(fits[1].data,
-                                         x_low=int(x0 - shift_tolerance), x_upper=int(x0 + shift_tolerance + 1),
-                                         y_low=int(y0 - shift_tolerance), y_upper=int(y0 + shift_tolerance + 1),
-                                         x_centre=int(x0), y_centre=int(y0),
-                                         mean=fits[1].header[mean_key], std=fits[1].header[std_key],
-                                         std_limit=2.0, burn_limit=2 * burn_limit, star_std=star_std)
+        centroids = find_centroids(fits[1].data,
+                                   x_low=int(x0 - shift_tolerance), x_upper=int(x0 + shift_tolerance + 1),
+                                   y_low=int(y0 - shift_tolerance), y_upper=int(y0 + shift_tolerance + 1),
+                                   x_centre=int(x0), y_centre=int(y0),
+                                   mean=fits[1].header[mean_key], std=fits[1].header[std_key],
+                                   std_limit=2.0, burn_limit=2 * burn_limit, star_std=star_std)
 
         if len(centroids) > 0:
 
@@ -264,7 +267,7 @@ def alignment():
             if test < 0.1 * len(comparisons):
                 stars_detected = False
                 delta_skip_time = time.time()
-                label3.configure(text='     ' + science_file.split(os.sep)[-1] + '     ')
+                label3.configure(text='     {0}     '.format(science_file.split(os.sep)[-1]))
                 label5.configure(text='     -%    ')
                 label7.configure(text='     -h -m -s     ')
                 ax.cla()
@@ -288,7 +291,7 @@ def alignment():
         else:
             stars_detected = False
             delta_skip_time = time.time()
-            label3.configure(text='     ' + science_file.split(os.sep)[-1] + '     ')
+            label3.configure(text='     {0}     '.format(science_file.split(os.sep)[-1]))
             label5.configure(text='     -%    ')
             label7.configure(text='     -h -m -s     ')
             ax.cla()
@@ -305,9 +308,9 @@ def alignment():
 
         if not stars_detected and not skip_frame:
 
-            centroids = tools.find_centroids(fits[1].data, x_centre=int(x0), y_centre=int(y0),
-                                             mean=fits[1].header[mean_key], std=fits[1].header[std_key],
-                                             std_limit=2.0, burn_limit=2 * burn_limit, star_std=star_std)
+            centroids = find_centroids(fits[1].data, x_centre=int(x0), y_centre=int(y0),
+                                       mean=fits[1].header[mean_key], std=fits[1].header[std_key],
+                                       std_limit=2.0, burn_limit=2 * burn_limit, star_std=star_std)
 
             if len(centroids) > 0:
 
@@ -359,11 +362,11 @@ def alignment():
             if not stars_detected:
 
                 ustep = np.arcsin(float(star_std) / comparisons[-1][0])
-                centroids = tools.find_centroids(fits[1].data,
-                                                 x_centre=x0, y_centre=y0,
-                                                 mean=fits[1].header[mean_key], std=fits[1].header[std_key],
-                                                 std_limit=2.0, burn_limit=2 * burn_limit, star_std=star_std,
-                                                 flux_order=True)
+                centroids = find_centroids(fits[1].data,
+                                           x_centre=x0, y_centre=y0,
+                                           mean=fits[1].header[mean_key], std=fits[1].header[std_key],
+                                           std_limit=2.0, burn_limit=2 * burn_limit, star_std=star_std,
+                                           flux_order=True)
 
                 tests = []
 
@@ -452,8 +455,8 @@ def alignment():
         if stars_detected:
 
             norm, floor, x_mean, y_mean, x_sigma, y_sigma = \
-                tools.fit_2d_gauss(fits[1].data, predicted_x_mean=x0, predicted_y_mean=y0,
-                                   search_window=2 * star_std)
+                fit_2d_gauss(fits[1].data, predicted_x_mean=x0, predicted_y_mean=y0,
+                             search_window=2 * star_std)
 
             x0, y0 = x_mean, y_mean
 
@@ -495,7 +498,7 @@ def alignment():
             hours = rm_time / 3600.0
             minutes = (hours - int(hours)) * 60
             seconds = (minutes - int(minutes)) * 60
-            label3.configure(text='     ' + science_file.split(os.sep)[-1] + '     ')
+            label3.configure(text='     {0}     '.format(science_file.split(os.sep)[-1]))
             label5.configure(text='     {0}%    '.format(new_percent))
             label7.configure(text='     %dh %02dm %02ds     ' % (int(hours), int(minutes), int(seconds)))
             percent = new_percent

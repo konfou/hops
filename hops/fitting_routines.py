@@ -1,4 +1,9 @@
-from hops_basics import *
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+from .hops_basics import *
+
 
 def initialise_window(window, window_name=None, exit_command=None):
 
@@ -106,11 +111,11 @@ def fitting():
     light_curve = np.loadtxt(light_curve_file, unpack=True)
 
     if binning > 1:
-        start = np.mod(len(light_curve[0]), binning)
+        start = len(light_curve[0]) - (len(light_curve[0]) // binning) * binning
         light_curve_0 = np.mean(np.reshape(light_curve[0][start:],
-                                           (light_curve[0].size / binning, binning)), 1)
+                                           (light_curve[0].size // binning, binning)), 1)
         light_curve_1 = np.mean(np.reshape(light_curve[1][start:],
-                                           (light_curve[1].size / binning, binning)), 1)
+                                           (light_curve[1].size // binning, binning)), 1)
     else:
         light_curve_0 = light_curve[0]
         light_curve_1 = light_curve[1]
@@ -137,9 +142,9 @@ def fitting():
         os.mkdir(fitting_directory)
     else:
         fi = 2
-        while os.path.isdir(fitting_directory + '_' + str(fi)):
+        while os.path.isdir('{0}_{1}'.format(fitting_directory, str(fi))):
             fi += 1
-        fitting_directory = fitting_directory + '_' + str(fi)
+        fitting_directory = '{0}_{1}'.format(fitting_directory, str(fi))
         os.mkdir(fitting_directory)
 
     if period_fit:

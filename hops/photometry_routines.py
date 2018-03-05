@@ -1,4 +1,9 @@
-from hops_basics import *
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+from .hops_basics import *
+
 
 def initialise_window(window, window_name=None, exit_command=None):
 
@@ -170,7 +175,7 @@ def photometry():
 
             ra_target, dec_target = target_ra_dec.split()
 
-            heliocentric_julian_date = tools.jd_to_hjd(ra_target, dec_target, julian_date)
+            heliocentric_julian_date = jd_to_hjd(ra_target, dec_target, julian_date)
 
             targets_hjd.append(heliocentric_julian_date)
 
@@ -185,12 +190,12 @@ def photometry():
                 if targets_aperture[target] > 0:
 
                     norm, floor, x_mean, y_mean, x_std, y_std = \
-                        tools.fit_2d_gauss(fits[1].data,
-                                           predicted_x_mean=(ref_x_position + targets_r_position[target] *
-                                                             np.cos(ref_u_position + targets_u_position[target])),
-                                           predicted_y_mean=(ref_y_position + targets_r_position[target] *
-                                                             np.sin(ref_u_position + targets_u_position[target])),
-                                           search_window=search_window_std * star_std)
+                        fit_2d_gauss(fits[1].data,
+                                     predicted_x_mean=(ref_x_position + targets_r_position[target] *
+                                                       np.cos(ref_u_position + targets_u_position[target])),
+                                     predicted_y_mean=(ref_y_position + targets_r_position[target] *
+                                                       np.sin(ref_u_position + targets_u_position[target])),
+                                     search_window=search_window_std * star_std)
 
                     targets_x_position.append(x_mean)
                     targets_y_position.append(y_mean)
@@ -229,7 +234,7 @@ def photometry():
             hours = rm_time / 3600.0
             minutes = (hours - int(hours)) * 60
             seconds = (minutes - int(minutes)) * 60
-            label3.configure(text='     ' + science_file.split(os.sep)[-1] + '     ')
+            label3.configure(text='     {0}     '.format(science_file.split(os.sep)[-1]))
             label5.configure(text='     {0}%    '.format(new_percent))
             label7.configure(text='     %dh %02dm %02ds     ' % (int(hours), int(minutes), int(seconds)))
             percent = new_percent
@@ -252,8 +257,8 @@ def photometry():
         # save results, create photometry directory and move results there
 
         measurements_number = len(targets_files)
-        targets_number = len(targets_x_position) / len(targets_files)
-        comparisons_number = len(targets_x_position) / len(targets_files) - 1
+        targets_number = len(targets_x_position) // len(targets_files)
+        comparisons_number = len(targets_x_position) // len(targets_files) - 1
 
         targets_hjd = np.array(targets_hjd)
         targets_x_position = np.swapaxes(np.reshape(targets_x_position, (measurements_number, targets_number)), 0, 1)
@@ -284,9 +289,9 @@ def photometry():
             os.mkdir(photometry_directory)
         else:
             fi = 2
-            while os.path.isdir(photometry_directory + '_' + str(fi)):
+            while os.path.isdir('{0}_{1}'.format(photometry_directory, str(fi))):
                 fi += 1
-            photometry_directory = photometry_directory + '_' + str(fi)
+            photometry_directory = '{0}_{1}'.format(photometry_directory, str(fi))
             os.mkdir(photometry_directory)
 
         root = Tk()

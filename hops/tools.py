@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 
 from scipy.optimize import curve_fit
@@ -75,19 +79,21 @@ def fit_gaussian(data_x_array, data_y_array):
 
     except RuntimeError:
 
-        print 'fit_gaussian: could not find a Gaussian'
+        print('fit_gaussian: could not find a Gaussian')
 
         return np.nan, np.nan, np.nan, np.nan
 
 
 def distribution1d(data_array, step=None, binning=None):
 
+    binning = int(binning)
+
     data_array = np.array(data_array).flatten()
     data_array = np.sort(data_array)
 
     if binning:
-        start = np.mod(data_array.size, binning)
-        data_array = np.mean(np.reshape(data_array[start:], (data_array.size / binning, binning)), 1)
+        start = data_array.size - (data_array.size // binning) * binning
+        data_array = np.mean(np.reshape(data_array[start:], (data_array.size // binning, binning)), 1)
 
     if not step:
         step = np.sqrt(np.median((data_array - np.median(data_array)) ** 2)) / 5.0
@@ -123,8 +129,10 @@ def fits_like(fits):
 
 def fit_2d_gauss_point(data_array, predicted_x_mean, predicted_y_mean, search_window):
 
-    def function_2d_gauss((x_array, y_array), model_norm, model_floor,
+    def function_2d_gauss(xy_array, model_norm, model_floor,
                           model_x_mean, model_y_mean, model_x_std, model_y_std, model_theta):
+
+        x_array, y_array = xy_array
 
         a = (np.cos(model_theta) ** 2) / (2 * model_x_std ** 2) + (np.sin(model_theta) ** 2) / (2 * model_y_std ** 2)
         b = -(np.sin(2 * model_theta)) / (4 * model_x_std ** 2) + (np.sin(2 * model_theta)) / (4 * model_y_std ** 2)
@@ -178,7 +186,7 @@ def fit_2d_gauss_point(data_array, predicted_x_mean, predicted_y_mean, search_wi
         return norm, floor, x_mean, y_mean, x_std, y_std
 
     else:
-        print 'fit_2d_gauss: could not find a 2D Gaussian'
+        print('fit_2d_gauss: could not find a 2D Gaussian')
         return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
 
@@ -186,8 +194,10 @@ def fit_2d_gauss(data_array, predicted_x_mean=None, predicted_y_mean=None, searc
 
     found = False
 
-    def function_2d_gauss((x_array, y_array), model_norm, model_floor,
+    def function_2d_gauss(xy_array, model_norm, model_floor,
                           model_x_mean, model_y_mean, model_x_std, model_y_std, model_theta):
+
+        x_array, y_array = xy_array
 
         a = (np.cos(model_theta) ** 2) / (2 * model_x_std ** 2) + (np.sin(model_theta) ** 2) / (2 * model_y_std ** 2)
         b = -(np.sin(2 * model_theta)) / (4 * model_x_std ** 2) + (np.sin(2 * model_theta)) / (4 * model_y_std ** 2)
@@ -254,7 +264,7 @@ def fit_2d_gauss(data_array, predicted_x_mean=None, predicted_y_mean=None, searc
         return norm, floor, x_mean, y_mean, x_std, y_std
 
     else:
-        print 'fit_2d_gauss: could not find a 2D Gaussian'
+        print('fit_2d_gauss: could not find a 2D Gaussian')
         return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
 

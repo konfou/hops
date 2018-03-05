@@ -1,41 +1,55 @@
-import warnings
-warnings.filterwarnings("ignore",
-                        message='Matplotlib is building the font cache using fc-list. This may take a moment.')
-warnings.filterwarnings("ignore",
-                        message='The installed version of numexpr 2.4.4 is not supported in pandas and will be not be used')
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-from Tkinter import *
-import tkFileDialog
-from tkMessageBox import *
-from astropy.io import fits as pf
-import os
-import glob
-import shutil
-import yaml
-import numpy as np
-import time
-import ephem
-import tools
-from scipy.optimize import curve_fit
+import sys
+
+if sys.version_info[0] > 2:
+    from tkinter import *
+    import tkinter.ttk as ttk
+    import tkinter.filedialog as tkFileDialog
+    from tkinter.messagebox import *
+else:
+    import ttk
+    from Tkinter import *
+    import tkFileDialog
+    from tkMessageBox import *
+
+import warnings
+warnings.filterwarnings(
+    'ignore', message='Matplotlib is building the font cache using fc-list. This may take a moment.')
+warnings.filterwarnings(
+    'ignore', message='The installed version of numexpr 2.4.4 is not supported in pandas and will be not be used')
+
 import matplotlib
 matplotlib.use('TkAgg')
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasBase, FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from matplotlib.backend_bases import key_press_handler, MouseEvent
+
+import os
+import sys
+import glob
+import time
+import yaml
+import ephem
+import numpy as np
+import shutil
+import pylightcurve as plc
 import matplotlib.cm as cm
 import matplotlib.patches as mpatches
-from matplotlib.offsetbox import AnchoredText
-import ttk
-import sys
 import matplotlib.patches as mpatch
 
-import pylightcurve as plc
+from .tools import *
+from astropy.io import fits as pf
+from scipy.optimize import curve_fit
+from matplotlib.figure import Figure
+from matplotlib.offsetbox import AnchoredText
+from matplotlib.backend_bases import key_press_handler, MouseEvent
+from matplotlib.backends.backend_tkagg import FigureCanvasBase, FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
 
 __location__ = os.path.abspath(os.path.dirname(__file__))
 
-holomon_logo = glob.glob(__location__ + '/holomon.gif')[0]
-main_logfile = __location__ + '/log.yaml'
+holomon_logo = glob.glob(os.path.join(__location__, 'holomon.gif'))[0]
+main_logfile = os.path.join(__location__, 'log.yaml')
 logfile = 'log.yaml'
 
 
@@ -59,7 +73,7 @@ def write_main_log(keyword, value, keyword2=None):
 
 def copy_main_log():
     if not os.path.isfile(logfile):
-        shutil.copy(main_logfile, "{0}/{1}".format(os.path.abspath('.'), logfile))
+        shutil.copy(main_logfile, '{0}/{1}'.format(os.path.abspath('.'), logfile))
 
 
 def read_log(keyword, keyword2=None):
@@ -101,7 +115,7 @@ def test_fits_keyword(fits_file, keyword):
 
     else:
         try:
-            fits_file = glob.glob('*' + fits_file + '*.f*t*')[0]
+            fits_file = glob.glob('*{0}*.f*t*'.format(fits_file))[0]
 
             if pf.open(fits_file)[0].header[str(keyword)]:
                 return [True, 'Keyword found', pf.open(fits_file)[0].header[str(keyword)]]
@@ -118,7 +132,7 @@ def test_file_number(fits_file):
     if len(fits_file) == 0:
         test = 0
     else:
-        test = len(glob.glob('*' + fits_file + '*.f*t*'))
+        test = len(glob.glob('*{0}*.f*t*'.format(fits_file)))
 
     if test > 0:
         return [True, '{0} files found'.format(test)]

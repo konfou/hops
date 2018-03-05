@@ -1,4 +1,8 @@
-from hops_basics import *
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+from .hops_basics import *
 
 
 def initialise_window(window, window_name=None, exit_command=None):
@@ -241,7 +245,7 @@ def reduction():
         fits[0].header.set('BZERO', 0.0)
         fits[0].header.set('BSCALE', 1.0)
 
-        norm, floor, mean, std = tools.fit_distribution1d_gaussian(fits[0].data, binning=fits[0].data.size / bin_to)
+        norm, floor, mean, std = fit_distribution1d_gaussian(fits[0].data, binning=fits[0].data.size / bin_to)
 
         if np.isnan(norm):
             mean = np.mean(fits[0].data)
@@ -262,7 +266,7 @@ def reduction():
 
         ra_target, dec_target = target_ra_dec.split()
 
-        heliocentric_julian_date = tools.jd_to_hjd(ra_target, dec_target, julian_date)
+        heliocentric_julian_date = jd_to_hjd(ra_target, dec_target, julian_date)
 
         testx.append(heliocentric_julian_date)
         testy.append(mean)
@@ -275,10 +279,10 @@ def reduction():
 
         if observation_date_key == observation_time_key:
                 local_time = fits[0].header[observation_date_key]
-                local_time = local_time.replace('-', '_').replace('T', '_').replace(':', '_') + '_'
+                local_time = '{0}_'.format(local_time.replace('-', '_').replace('T', '_').replace(':', '_'))
         else:
-                local_time = (fits[0].header[observation_date_key].split('T')[0].replace('-', '_') + '_' +
-                              fits[0].header[observation_time_key].replace(':', '_') + '_')
+                local_time = '{0}_{1}_'.format(fits[0].header[observation_date_key].split('T')[0].replace('-', '_'),
+                                               fits[0].header[observation_time_key].replace(':', '_'))
 
         try:
             hdu = pf.CompImageHDU(header=fits[0].header, data=fits[0].data)
@@ -307,7 +311,7 @@ def reduction():
             hours = rm_time / 3600.0
             minutes = (hours - int(hours)) * 60
             seconds = (minutes - int(minutes)) * 60
-            label3.configure(text='     ' + science_file.split(os.sep)[-1] + '     ')
+            label3.configure(text='     {0}     '.format(science_file.split(os.sep)[-1]))
             label5.configure(text='     {0}%    '.format(new_percent))
             label7.configure(text='     %dh %02dm %02ds     ' % (int(hours), int(minutes), int(seconds)))
             percent = new_percent
