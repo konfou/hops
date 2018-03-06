@@ -2,3 +2,4 @@
 *.egg-info/
 MANIFEST.in
 local_*
+hops/log.yaml
