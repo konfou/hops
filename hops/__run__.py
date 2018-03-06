@@ -541,6 +541,8 @@ def photometry_window():
 
     observation_files = read_log('pipeline', 'observation_files')
     reduction_directory = read_log('pipeline', 'reduction_directory')
+    light_curve_aperture_file = read_log('pipeline', 'light_curve_aperture_file')
+    photometry_directory = read_log('pipeline', 'photometry_directory')
     fov_figure = read_log('pipeline', 'fov_figure')
     mean_key = read_log('pipeline_keywords', 'mean_key')
     std_key = read_log('pipeline_keywords', 'std_key')
@@ -783,7 +785,8 @@ def photometry_window():
             else:
                 photometry_button['state'] = NORMAL
 
-            if read_log('pipeline', 'photometry_complete') and not open_root4.get():
+            if (read_log('pipeline', 'photometry_complete') and not open_root4.get()
+               and len(glob.glob(os.path.join('{0}*'.format(photometry_directory), light_curve_aperture_file))) > 0):
                 proceed_to_fitting_button['state'] = NORMAL
 
             else:
