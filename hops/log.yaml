@@ -26,6 +26,7 @@ fitting:
   phot_filter: R
   planet: Choose Planet
   planet_search: ' '
+  return_to_photometry: false
   rp_over_rs: 0.0
   rp_over_rs_fit:
   - 0.5
