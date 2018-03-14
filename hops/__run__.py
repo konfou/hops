@@ -1366,8 +1366,10 @@ def fitting_window():
         write_log('fitting', inclination.get(), 'inclination')
         write_log('fitting', eccentricity.get(), 'eccentricity')
         write_log('fitting', periastron.get(), 'periastron')
+        write_log('fitting', True, 'return_to_photometry')
 
         root.destroy()
+        root5.destroy()
 
     def fitting():
 
@@ -1401,6 +1403,7 @@ def fitting_window():
 
     def exit_hops():
         root.destroy()
+        root5.destroy()
         os._exit(-1)
 
     # connect widgets to functions
@@ -1469,7 +1472,9 @@ def fitting_window():
     # finalise and show  window
 
     finalise_window(root, position=5)
+
     root.mainloop()
+    root5.mainloop()
 
 
 def run_app():
@@ -1477,3 +1482,9 @@ def run_app():
     reduction_alignment_window()
     photometry_window()
     fitting_window()
+    return_to_photometry = read_log('fitting', 'return_to_photometry')
+    while return_to_photometry:
+        write_log('fitting', False, 'return_to_photometry')
+        photometry_window()
+        fitting_window()
+        return_to_photometry = read_log('fitting', 'return_to_photometry')
