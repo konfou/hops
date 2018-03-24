@@ -46,8 +46,8 @@ photometry:
   use_auto_target_ra_dec: true
 pipeline:
   alignment_complete: false
-  directory: /Users/angelos/Desktop/qatar5b_20171009
-  directory_short: Desktop/qatar5b_20171009
+  directory: /Users/angelos/Desktop/qatar1b/2012.08.07.qatar1b.cge.c11.fli.filter_lum.L
+  directory_short: qatar1b/2012.08.07.qatar1b.cge.c11.fli.filter_lum.L
   fitting_directory: FITTING
   fov_figure: FOV.pdf
   light_curve_aperture_file: PHOTOMETRY_APERTURE.txt
