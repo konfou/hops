@@ -1,11 +1,9 @@
+from __future__ import absolute_import
 import platform
 import os
+from hops import __get_abspath__
 
 name = 'hops'
-
-os.chdir(os.path.expanduser('~'))
-
-from hops import __get_abspath__
 
 app_dir = __get_abspath__()
 system = platform.system()

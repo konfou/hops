@@ -26,7 +26,6 @@ fitting:
   phot_filter: R
   planet: Choose Planet
   planet_search: ' '
-  return_to_photometry: false
   rp_over_rs: 0.0
   rp_over_rs_fit:
   - 0.5
@@ -47,8 +46,8 @@ photometry:
   use_auto_target_ra_dec: true
 pipeline:
   alignment_complete: false
-  directory: Choose Directory
-  directory_short: Choose Directory
+  directory: /Users/angelos/Desktop/qatar5b_20171009
+  directory_short: Desktop/qatar5b_20171009
   fitting_directory: FITTING
   fov_figure: FOV.pdf
   light_curve_aperture_file: PHOTOMETRY_APERTURE.txt

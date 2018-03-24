@@ -114,7 +114,7 @@ def finalise_window(window, position=5):
         x = 0
         y = 0
 
-    window.geometry('+%d+%d' % (x, y))
+    window.geometry('+%d+%d' % (int(x), int(y)))
 
     window.update_idletasks()
 
@@ -378,7 +378,7 @@ def reduction_alignment_window():
         update_window(None)
 
         root2 = Tk()
-        root2.geometry('{0}x{1}'.format(root2.winfo_screenwidth() / 3, root2.winfo_screenheight() / 3))
+        root2.geometry('{0}x{1}'.format(int(root2.winfo_screenwidth() / 3), int(root2.winfo_screenheight() / 3)))
         root2.update_idletasks()
 
         def root2_close():
@@ -409,7 +409,7 @@ def reduction_alignment_window():
         update_window(None)
 
         root3 = Tk()
-        root3.geometry('{0}x{1}'.format(root3.winfo_screenwidth() / 3, root3.winfo_screenheight() / 3))
+        root3.geometry('{0}x{1}'.format(int(root3.winfo_screenwidth() / 3), int(root3.winfo_screenheight() / 3)))
         root3.update_idletasks()
 
         def root3_close():
